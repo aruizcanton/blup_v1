@@ -14,17 +14,25 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'dart:convert';
 
 import 'home.dart';
 import 'login.dart';
+import 'registry.dart';
+import 'validateRegistry.dart';
+import 'reset.dart';
+import 'validateResetPass.dart';
 import 'colors.dart';
+import 'utils/util.dart';
 
 final storage = FlutterSecureStorage();
+
 // TODO: Convert BlupApp to stateful widget (104)
 class BlupApp extends StatelessWidget {
-  Future<String> get jwtOrEmpty async {
+
+  Future<String> _jwtOrEmpty() async {
     var jwt = await storage.read(key: "jwt");
-    if(jwt == null) return "";
+    if(jwt == null) return "No existe Token";
     return jwt;
   }
   @override
@@ -32,11 +40,39 @@ class BlupApp extends StatelessWidget {
     return MaterialApp(
       title: 'Blup',
       // TODO: Change home: to a Backdrop with a HomePage frontLayer (104)
-      home: HomePage(),
+      home: FutureBuilder (
+          future: _jwtOrEmpty(),
+          builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return PleaseWaitWidget();
+          } else {
+            if (snapshot.data != "No existe Token") {
+              var str = snapshot.data;
+              var jwt = str.split(".");
+              if (jwt.length != 3) {
+                return LoginPage();
+              } else {
+                var payload = json.decode(utf8.decode(base64.decode(base64.normalize(jwt[1]))));
+                print("Antes de imprimir el payload");
+                print(payload);
+                if (DateTime.fromMillisecondsSinceEpoch(payload["exp"]*1000).isAfter(DateTime.now())) {
+                  print("El token es válido aun");
+                  return HomePage();
+                } else {
+                  return LoginPage();
+                }
+              }
+            } else {
+              return LoginPage();
+            }
+          }
+        }
+      ),
+      //initialRoute: '/login',
       // TODO: Make currentCategory field take _currentCategory (104)
       // TODO: Pass _currentCategory for frontLayer (104)
       // TODO: Change backLayer field value to CategoryMenuPage (104)
-      initialRoute: '/login',
+      //initialRoute: '/login',
       onGenerateRoute: _getRoute,
       // TODO: Add a theme (103)
       theme: _blupTheme, // New code
@@ -44,18 +80,48 @@ class BlupApp extends StatelessWidget {
   }
 
   Route<dynamic> _getRoute(RouteSettings settings) {
-    if (settings.name != '/login') {
+//    if (settings.name != '/login') {
+//      return null;
+//    }
+    if (settings.name == '/login') {
+      return MaterialPageRoute<void>(
+        settings: settings,
+        builder: (BuildContext context) => LoginPage(),
+        fullscreenDialog: true,
+      );
+    } else if (settings.name == 'login/registry') {
+      final ScreenArguments args = settings.arguments;
+      return MaterialPageRoute<void>(
+        settings: settings,
+        builder: (BuildContext context) => RegistryPage(args.user_name),
+        fullscreenDialog: true,
+      );
+    } else if (settings.name == 'login/registry/validate'){
+      final ScreenArguments args = settings.arguments;
+      return MaterialPageRoute<void>(
+        settings: settings,
+        builder: (BuildContext context) => validateRegistryPage(args.user_name),
+        fullscreenDialog: true,
+      );
+    } else if (settings.name == '/login/restableceContraseña') {
+      final ScreenArguments args = settings.arguments;
+      return MaterialPageRoute<void>(
+        settings: settings,
+        builder: (BuildContext context) => ResetPage(args.user_name),
+        fullscreenDialog: true,
+      );
+    } else if (settings.name == '/login/restableceContraseña/validate'){
+      final ScreenArguments args = settings.arguments;
+      return MaterialPageRoute<void>(
+        settings: settings,
+        builder: (BuildContext context) => validateResetPage(args.user_name),
+        fullscreenDialog: true,
+      );
+    } else {
       return null;
     }
-
-    return MaterialPageRoute<void>(
-      settings: settings,
-      builder: (BuildContext context) => LoginPage(),
-      fullscreenDialog: true,
-    );
   }
 }
-
 // TODO: Build a Blup Theme (103)
 final ThemeData _blupTheme = _buildBlupTheme();
 ThemeData _buildBlupTheme() {
