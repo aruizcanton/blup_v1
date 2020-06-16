@@ -14,8 +14,30 @@
 
 import 'package:flutter/material.dart';
 import 'colors.dart';
+import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'utils/util.dart';
 
-class HomePage extends StatelessWidget {
+final storage = FlutterSecureStorage();
+
+class HomePage extends StatefulWidget {
+  HomePage({Key key}) : super(key: key);
+
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+class _HomePageState extends State<HomePage> {
+  int _selectedIndex = 1;
+  Future<String> get jwtOrEmpty async {
+    var jwt = await storage.read(key: "jwt");
+    if(jwt == null) return "";
+    return jwt;
+  }
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
   // TODO: Make a collection of cards (102)
   // TODO: Add a variable for Category (104)
   @override
@@ -59,7 +81,7 @@ class HomePage extends StatelessWidget {
 
       // TODO: Add a grid view (102)
       body: ListView(
-        padding: EdgeInsets.all(8.0),
+        padding: EdgeInsets.all(2.0),
         // TODO: Build a grid of cards (102)
         children: <Widget>[
           Card(
@@ -68,11 +90,11 @@ class HomePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Padding(
-                  padding: EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 8.0),
+                  padding: EdgeInsets.fromLTRB(8.0, 12.0, 16.0, 8.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      CustomListItem(
+                      _CustomListItem(
                         user: 'Ángel Ruiz',
                         saldoAcumulado: 2000,
                         puedesRetirar: 1000,
@@ -86,20 +108,137 @@ class HomePage extends StatelessWidget {
           ),
           Card(
             clipBehavior: Clip.antiAlias,
-            child: Column(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                _CustomAmountPermitedDetray(1000),
+              ],
+            ),
           ),
           Card(
             clipBehavior: Clip.antiAlias,
-            child: Column(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Center(
+                    child: Container(
+                      margin: EdgeInsets.all(30),
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.yellow,
+                        border: Border.all(color: Colors.black),
+                      ),
+                      child: Text(
+                        "Folios",
+                        style: TextStyle(
+                          fontSize: 50.0,
+                        ),
+                      ),
+                    )
+                ),
+              ],
+            ),
           ),
       ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            title: Text(
+                'Perfil',
+            ),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.attach_money),
+            title: Text('Retiro'),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.trending_up),
+//            icon: Icon(Icons.format_list_bulleted),
+            title: Text('Saldo'),
+          ),
+        ],
+        currentIndex: _selectedIndex,
+//        selectedItemColor: Colors.amber[800],
+        selectedItemColor: kBlupErrorRed,
+        onTap: _onItemTapped,
       ),
       // TODO: Set resizeToAvoidBottomInset (101)
     );
   }
 }
-class CustomListItem extends StatelessWidget {
-  const CustomListItem({
+class _CustomAmountPermitedDetray extends StatefulWidget{
+  final int puedesRetirar;
+  _CustomAmountPermitedDetray (this.puedesRetirar);
+  @override
+  _SliderAmountPermitedDetrayState createState() {
+
+    return _SliderAmountPermitedDetrayState(puedesRetirar);
+
+  }
+}
+class _SliderAmountPermitedDetrayState extends State {
+  int _rating = 0;
+  final int puedesRetirar;
+  _SliderAmountPermitedDetrayState(this.puedesRetirar);
+  final _usernameController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return new Padding(
+        padding: EdgeInsets.fromLTRB(8.0, 12.0, 16.0, 4.0),
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                '¿Cuánto desea retirar?',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 20.0,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: 12.0),
+              AccentColorOverride(
+                color: kBlupBackgroundWhite,
+                child: TextField(
+                  controller: _usernameController,
+                  decoration: InputDecoration(
+                    labelText: _rating.toString(),
+                  ),
+                  enabled: false,
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 20.0,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              SizedBox(height: 12.0),
+              Slider(
+                  value: this._rating.toDouble(),
+                  min: 0,
+                  max: this.puedesRetirar.toDouble(),
+                  activeColor: Colors.white,
+                  inactiveColor: Colors.black,
+                  label: 'Set a value',
+                  onChanged: (double newValue){
+                    setState(() {
+                      _rating = newValue.round().toInt();
+                    });
+                  },
+                  semanticFormatterCallback: (double newValue) {
+                    return '${newValue.round()} dollars';
+                  }
+              )
+            ]
+        )
+    );
+  }
+}
+class _CustomListItem extends StatelessWidget {
+  const _CustomListItem({
     this.user,
     this.saldoAcumulado,
     this.puedesRetirar,
