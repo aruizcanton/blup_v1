@@ -221,38 +221,51 @@ class _LoginPageState extends State<LoginPage> {
                 child: Text('ENTRAR'),
                 elevation: 8.0, // New code
                 onPressed: () async {
-                  if (_usernameController.text == '') {
-                    _showSnackBar('Debe introducir un email.',error: false);
-                  } else if (_passwordController.text == '') {
-                    _showSnackBar('Debe introducir una password.',error: false);
-                  } else if (! validateEmail(_usernameController.text)) {
-                    _showSnackBar('Debe introducir un correo electrónico correcto.',error: false);
-                  } else {
-                    var username = _usernameController.text;
-                    var password = _passwordController.text;
-                    var jwt = await attemptLogIn(username, password);
-                    print('Hola estoy aquí');
-                    print(jwt);
-                    //                    if (jwt != null) {
-                    if (jwt['code'] == 200) {
-                      storage.write(key: "jwt", value: jwt["token"]);
-                      if (_recordarContrasena) {
-                        storage.write(key: _usernameController.text, value: _passwordController.text);
-                        print ('Paso por el recordar contraseña');
-                        print ('El usuario es: ' + _usernameController.text);
-                        print ('La password es: ' + _passwordController.text);
-                      } else {
-                        storage.delete(key: _usernameController.text);
-                      }
-                      //Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => HomePage())
-                      );
+                  try {
+                    if (_usernameController.text == '') {
+                      _showSnackBar('Debe introducir un email.', error: false);
+                    } else if (_passwordController.text == '') {
+                      _showSnackBar(
+                          'Debe introducir una password.', error: false);
+                    } else if (!validateEmail(_usernameController.text)) {
+                      _showSnackBar(
+                          'Debe introducir un correo electrónico correcto.',
+                          error: false);
                     } else {
-                      _showSnackBar(jwt['token'], error: false);
-                      //                    displayDialog(context, "Error de acceso", "Error: " + jwt['token']);
+                      var username = _usernameController.text;
+                      var password = _passwordController.text;
+                      var jwt = await attemptLogIn(username, password);
+                      print('Hola estoy aquí');
+                      print(jwt);
+                      //                    if (jwt != null) {
+                      if (jwt['code'] == 200) {
+                        // Guardo el token de seguridad en local
+                        storage.write(key: "jwt", value: jwt["token"]);
+                        // Guardo el token de seguridad en la variable global appToken
+                        print('Después de la decodificacion');
+                        if (_recordarContrasena) {
+                          storage.write(key: _usernameController.text,
+                              value: _passwordController.text);
+                          print('Paso por el recordar contraseña');
+                          print('El usuario es: ' + _usernameController.text);
+                          print(
+                              'La password es: ' + _passwordController.text);
+                        } else {
+                          storage.delete(key: _usernameController.text);
+                        }
+                        //Navigator.pop(context);
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => HomePage.fromBase64(jwt['token']))
+                        );
+                      } else {
+                        _showSnackBar(jwt['token'], error: false);
+                        //                    displayDialog(context, "Error de acceso", "Error: " + jwt['token']);
+                      }
                     }
+                  }catch (e) {
+                    _showSnackBar(e.toString(), error: false);
+                    print('Error' + e.toString());
                   }
                   // TODO: Show the next page (101)
                 },
