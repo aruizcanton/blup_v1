@@ -14,14 +14,13 @@
 import 'package:flutter/material.dart';
 import 'colors.dart';
 import 'dart:convert';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'utils/util.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:intl/intl.dart';
-
-
-final storage = FlutterSecureStorage();
+import 'package:intl/intl.dart' show NumberFormat hide TextDirection;
+import 'detalleRetiro.dart';
+import 'package:flutter_xlider/flutter_xlider.dart';
+//import 'package:keyboard_actions/keyboard_actions.dart';
 
 class HomePage extends StatefulWidget {
   HomePage(this.jwt, this.payload);
@@ -47,26 +46,12 @@ class _HomePageState extends State<HomePage> {
 //  _UserOperationData _datosOperativaCliente;
   //Map _datosOperativaCliente;
   int _selectedIndex = 1;
-  bool _pleaseWait = false;
-  int _empleado_id;
-  int _company_id;
-  String _persone_name;
-  String _email;
-  String _empresa;
-  int _salario_acumulado;
-  int _dias_nomina;
-  int _max_permitido;
-  int _periodo_id;
-  int _bank_account_id;
-  int _comision;
-  int _ban_bloqueo;
-  int _fch_desbloqueo;
-  int _digitalnip;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final PleaseWaitWidget _pleaseWaitWidget =
   PleaseWaitWidget(key: ObjectKey("pleaseWaitWidget"));
-
+  final GlobalKey<_CustomListItemState> _customListItemKey = GlobalKey<_CustomListItemState>();
+  bool _pleaseWait = false;
 
   _showSnackBar(String content, {bool error = false}) {
     _scaffoldKey.currentState.showSnackBar(SnackBar(
@@ -162,6 +147,19 @@ class _HomePageState extends State<HomePage> {
       key: _scaffoldKey,
       // TODO: Add app bar (102)
       appBar: AppBar(
+        leading: Builder(
+            builder: (BuildContext context){
+              return IconButton(
+                  icon: Icon(
+                    Icons.menu,
+                    semanticLabel: 'menu',
+                    color: Colors.white,
+                  ),
+                  onPressed: () { Scaffold.of(context).openDrawer(); },
+                  tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+              );
+            }
+        ),
         backgroundColor: primaryDarkColor,
 //        textTheme: ,
         // TODO: Add buttons and title (102)
@@ -169,16 +167,6 @@ class _HomePageState extends State<HomePage> {
           style: TextStyle(
             color: Colors.white,
           ),
-        ),
-        leading: IconButton(
-          icon: Icon(
-            Icons.menu,
-            semanticLabel: 'menu',
-            color: Colors.white,
-          ),
-          onPressed: () {
-            print('Menu button');
-          },
         ),
         actions: <Widget>[
           IconButton(
@@ -193,7 +181,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      // TODO: Add a grid view (102)
       body: ListView(
         padding: EdgeInsets.all(2.0),
         // TODO: Build a grid of cards (102)
@@ -209,6 +196,7 @@ class _HomePageState extends State<HomePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           _CustomListItem(
+                            key: _customListItemKey,
                             user: payload['persone_name'],
                             saldoAcumulado: payload['salario_acumulado'],
                             puedesRetirar: payload['max_permitido'],
@@ -225,7 +213,7 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                 _CustomAmountPermitedDetray(payload['max_permitido'], _scaffoldKey),
+                 _CustomAmountPermitedDetray(payload['max_permitido'], _scaffoldKey, _customListItemKey, payload['bank'], payload['acct_no'], payload['comision'], jwt, payload),
               ],
             ),
           ),
@@ -254,6 +242,47 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            Container(
+              height: 80.0,
+              child:DrawerHeader(
+                  child: Text(
+                    'BLUP',
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+                  decoration: BoxDecoration(
+                      color: primaryColor
+                  )
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.person_outline),
+              title: Text('Perfil'),
+            ),
+            ListTile(
+              leading: Icon(Icons.vpn_key),
+              title: Text('Contraseña y PIN'),
+            ),
+            ListTile(
+              leading: Icon(Icons.question_answer),
+              title: Text('Soporte'),
+            ),
+            ListTile(
+              leading: Icon(Icons.live_help),
+              title: Text('Preguntas frecuentes'),
+            ),
+            ListTile(
+              leading: Icon(Icons.error),
+              title: Text('Términos y condiciones'),
+            )
+          ],
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
@@ -284,32 +313,61 @@ class _HomePageState extends State<HomePage> {
   }
 }
 class _CustomAmountPermitedDetray extends StatefulWidget{
-  final int puedesRetirar;
+  int puedesRetirar;
   final GlobalKey<ScaffoldState> scafoldKey;
-  _CustomAmountPermitedDetray (this.puedesRetirar, this.scafoldKey);
+  GlobalKey<_CustomListItemState> customListItemKey;
+  final String banco;
+  final String cuenta;
+  final int cuota;
+  final String jwt;
+  final Map<String, dynamic> payload;
+  _CustomAmountPermitedDetray (this.puedesRetirar, this.scafoldKey, this.customListItemKey, this.banco, this.cuenta, this.cuota, this.jwt, this.payload);
   @override
   _SliderAmountPermitedDetrayState createState() {
 
-    return _SliderAmountPermitedDetrayState(puedesRetirar, scafoldKey);
+    return _SliderAmountPermitedDetrayState (puedesRetirar, scafoldKey, customListItemKey, banco, cuenta, cuota, jwt, payload);
 
   }
 }
 class _SliderAmountPermitedDetrayState extends State {
 
-  _SliderAmountPermitedDetrayState(this.puedesRetirar, this.scafoldKey);
-  final int puedesRetirar;
+  _SliderAmountPermitedDetrayState (this.puedesRetirar, this.scafoldKey, this.customListItemKey, this.banco, this.cuenta, this.cuota, this.jwt, this.payload);
+  int puedesRetirar;
   final GlobalKey<ScaffoldState> scafoldKey;
+  final GlobalKey<_CustomListItemState> customListItemKey;
+  final String banco;
+  final String cuenta;
+  final int cuota;
+  final String jwt;
+  final Map<String, dynamic> payload;
 
+  GlobalKey _sliderKey = GlobalKey();
+  final PleaseWaitBlueBackGroundWidget _pleaseWaitWidget =
+  PleaseWaitBlueBackGroundWidget(key: ObjectKey("pleaseWaitBlueBackGroundWidget"));
+  bool _pleaseWait = false;
+  int _puedesRetirar;
   int _rating = 0;
   TextEditingController _amountToDetray = TextEditingController();
   NumberFormat _f = new NumberFormat('#,###', 'en_US');
   bool _textFieldActivated = true;
   var _iconColor = secondaryTextColor;
+  FocusNode _nodeTextAmountToRetrieve = FocusNode();
+  bool _tecladoNumerico = true;
+  bool _expandFlag = false;
+
+
+  double _lowerValue = 0;
+  double _upperValue = 0;
+  bool _confirmaRetiro = false;
 
   @override
   void initState(){
     super.initState();
     _amountToDetray.text = "0";
+    _confirmaRetiro = false;
+    _puedesRetirar = puedesRetirar;
+    _tecladoNumerico = true;
+    _expandFlag = false;
   }
 
   @override
@@ -320,136 +378,379 @@ class _SliderAmountPermitedDetrayState extends State {
   _validateTextField (){
 
   }
+  _showPleaseWait(bool b) {
+    setState(() {
+      _pleaseWait = b;
+    });
+  }
   _showSnackBar(String content, {bool error = false}) {
     scafoldKey.currentState.showSnackBar(SnackBar(
       content:
       Text('${error ? "Ocurrió un error: " : ""}${content}'),
     ));
   }
+  _fieldFocusChange(BuildContext context, FocusNode currentFocus,FocusNode nextFocus) {
+    currentFocus.unfocus();
+    FocusScope.of(context).requestFocus(nextFocus);
+  }
+  void _displayDialog (BuildContext context, String title, String banco, String cuenta, int cuota) => showDialog (
+    context: context,
+    builder: (context) =>
+        AlertDialog (
+          title: Text(
+            'Retiras: \$ ' + title,
+            textAlign: TextAlign.center
+          ),
+          content: _DetallesExtraccion(
+            banco: banco,
+            cuenta: cuenta,
+            cuota: cuota,
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text(
+                'Confirmar',
+              ),
+              onPressed: () {
+                setState(() {
+                  _confirmaRetiro = true;
+                });
+                Navigator.of(context).pop();
+              },
+              color: Colors.blue,
+            ),
+            FlatButton(
+              child: Text(
+                'Cancelar',
+              ),
+              onPressed: (){
+                setState(() {
+                  _confirmaRetiro = false;
+                });
+                Navigator.of(context).pop();
+              },
+              color: Colors.blue,
+            ),
+          ],
+          elevation: 24.0,
+        ),
+  );
+
   @override
   Widget build(BuildContext context) {
-    return new Padding(
-        padding: const EdgeInsets.fromLTRB(15.0, 5.0, 20.0, 5.0),
-        child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final ThemeData _theme = Theme.of(context);
+    final SliderThemeData _themeSlider = _theme.sliderTheme;
+    Widget builder = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Text(
-                    '¿Cuánto desea retirar?',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 20.0,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
+              Text(
+                '¿Cuánto desea retirar?',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 20.0,
+                  color: Colors.black,
+                ),
               ),
-              SizedBox(height: 12.0),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Expanded(
-                    flex: 6,
-                    child: AccentColorOverride (
-                      color: kBlupBackgroundWhite,
-                      child: TextField(
-                        controller: _amountToDetray,
-                        textAlign: TextAlign.center,
-                        enabled: _textFieldActivated,
-                        onTap: () => {_amountToDetray.text=""},
-                        onChanged: (text) {
-                          _rating = int.parse(text);
-                          if (_rating > puedesRetirar) {
-                            _showSnackBar('La cantidad a retirar no puede ser mayor a ' + _f.format(puedesRetirar), error: false);
-                          }
-                        },
-                        onSubmitted: (text) {
-                          _amountToDetray.text = _f.format(int.parse(text));
-                          print('La cantidad que se ha escrito es: ' + _amountToDetray.text);
-                          _rating = int.parse(text);
-                          print('La cantidad cruda es:' + _rating.toString());
-                          print('El maximo que puedes retirar es: ' + puedesRetirar.toString());
-                          if (_rating > puedesRetirar) {
-                            _showSnackBar('La cantidad a retirar no puede ser mayor a ' + _f.format(puedesRetirar), error: false);
-                          }
-                        },
-                        style: const TextStyle(
+            ],
+          ),
+          SizedBox(height: 12.0),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Expanded (
+                flex: 6,
+                child: AccentColorOverride (
+                  color: kBlupBackgroundWhite,
+                  child: TextFormField (
+                    controller: _amountToDetray,
+                    textInputAction: TextInputAction.done,
+                    focusNode: _nodeTextAmountToRetrieve,
+                    textAlign: TextAlign.center,
+                    onTap: () {
+                      _amountToDetray.text="";
+                      setState(() {
+                        _expandFlag = true;
+                      });
+                    },
+                    enabled: true,
+                    //keyboardType: _tecladoNumerico ? TextInputType.number : TextInputType.emailAddress,
+                    keyboardType: TextInputType.text,
+                    onFieldSubmitted: (text) {
+                      print('La cantidad que se ha escrito es: ' + _amountToDetray.text);
+                      var importe = int.parse(text);
+                      print('La cantidad cruda es:' + _rating.toString());
+                      print('El maximo que puedes retirar es: ' + _puedesRetirar.toString());
+                      if (importe > _puedesRetirar) {
+                        _showSnackBar('El monto a retirar no puede ser mayor a ' + _f.format(_puedesRetirar) + ' pesos.', error: false);
+                      }
+                      print('Después de llamar al _show');
+                      setState(() {
+                        _expandFlag = !_expandFlag;
+                      });
+                    },
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 40.0,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    decoration: InputDecoration(
+                      prefixIcon: Icon(Icons.attach_money),
+                      suffixIcon: IconButton(
+                          icon: Icon(Icons.keyboard),
+                          onPressed: () {
+                            setState(() {
+                              print('Antes valor de _tecladoNumerico es: ' +_tecladoNumerico.toString());
+                              _tecladoNumerico = ! _tecladoNumerico;
+                              print('Despues valor de _tecladoNumerico es: ' +_tecladoNumerico.toString());
+                            });
+                          },
                           color: Colors.black,
-                          fontSize: 20.0,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        decoration: InputDecoration(
-                          prefixIcon: Icon(Icons.attach_money),
-                        ),
                       ),
                     ),
                   ),
-                  Expanded(
-                      child: IconButton(
-                        icon: Icon(Icons.keyboard),
-                        color: _iconColor,
-                        onPressed: () {
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 2.0),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Expanded(
+                  child: Container(
+                    margin: EdgeInsets.only(top: 5),
+                    child: new SliderTheme(
+                      data: _themeSlider.copyWith(
+                          thumbShape: _RoundedRectangleThumbShape(
+                            thumbRadius: 12,
+                            roundness: 5,
+                            thickness: 12,
+                          ),
+                          valueIndicatorShape: _CircularValueShape(
+                              _rating.toDouble(),
+                              radius: 2,
+                              borderThickness: 2
+                          ),
+                          //overlayShape: RoundSliderOverlayShape(overlayRadius: 6),
+                          inactiveTrackColor: Colors.grey.shade200,
+                          activeTrackColor: Colors.black,
+                          thumbColor: Colors.red,
+                          showValueIndicator: ShowValueIndicator.always
+                      ),
+                      child: Slider(
+                        key: _sliderKey,
+                        value: _rating.toDouble(),
+                        min: 0,
+                        max: _puedesRetirar.toDouble(),
+                        activeColor: Colors.white,
+                        inactiveColor: Colors.black,
+                        onChanged: (double newValue){
                           setState(() {
-                            _textFieldActivated = ! _textFieldActivated;
-                            if (_iconColor == secondaryTextColor) _iconColor = primaryTextColor;
-                            else _iconColor = secondaryTextColor;
+                            _rating = newValue.round().toInt();
+                            //_amountToDetray.text = _f.format(_rating.toInt());
+                            _amountToDetray.text = _rating.toString();
                           });
                         },
+                        onChangeStart: (valor) {
+                          setState(() {
+                            _textFieldActivated = false;
+                            _iconColor = secondaryTextColor;
+                          });
+                        },
+                        semanticFormatterCallback: (double newValue) {
+                          return '${newValue.round()} dollars';
+                        },
                       ),
+                    ),
                   )
-                ],
-              ),
-              SizedBox(height: 12.0),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Expanded(
-                    child:
-                      Slider(
-                          value: _rating.toDouble(),
-                          min: 0,
-                          max: puedesRetirar.toDouble(),
-                          activeColor: Colors.white,
-                          inactiveColor: Colors.black,
-                          label: 'Set a value',
-                          onChanged: (double newValue){
-                            setState(() {
-                              _rating = newValue.round().toInt();
-                              _amountToDetray.text = _f.format(_rating.toInt());
-                            });
-                          },
-                          onChangeStart: (valor) {
-                            setState(() {
-                              _textFieldActivated = false;
-                            });
-                          },
-                          semanticFormatterCallback: (double newValue) {
-                            return '${newValue.round()} dollars';
-                          },
-                      )
-                  )
-                ],
-              ),
-            ]
-        )
+              )
+            ],
+          ),
+          ExpandableContainer(
+            expanded: _expandFlag,
+            expandedHeight: 100,
+            child: new Column(
+              children: <Widget>[
+                Container (
+                  margin: EdgeInsets.only(top: 5),
+                  child: const Divider(
+                    color: kBlupIndigo50,
+                    height: 20,
+                    thickness: 1,
+                    indent: 25,
+                    endIndent: 25,
+                  ),
+                ),
+                Row (
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Expanded(
+                        child: Container(
+                          child: Text('Cuota por retiro'),
+                        )
+                    ),
+                    Expanded(
+                        child: Container(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            cuota == 0 ? 'GRATUITA' : new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(cuota),
+                            //'GRATUITA'
+                          ),
+                        )
+                    ),
+                  ],
+                ),
+                Row (
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Expanded (
+                        child: Container(
+                          margin: EdgeInsets.only(top: 5),
+                          child:FlatButton (
+                            color: primaryDarkColor,
+                            textColor: Colors.white,
+                            padding: EdgeInsets.all(8.0),
+                            onPressed: () async {
+                              try {
+                                if (int.parse(_amountToDetray.text) > 0) {
+                                  if (int.parse(_amountToDetray.text) <= customListItemKey.currentState.puedesRetirar) {
+                                    await _displayDialog (context, _amountToDetray.text, banco, cuenta, cuota);
+                                    print ('El valor de _confirmaretiro es: ' + _confirmaRetiro.toString());
+                                    if (_confirmaRetiro) {
+                                      print('He confirmado el retiro');
+                                      print('Justo antes de llamar a _showPleaseWait');
+                                      print('El valor de pleaseWait es: ' + _pleaseWait.toString());
+                                      _showPleaseWait(true);
+                                      print('Justo después de llamar a _showPleaseWait');
+                                      print('El valor de pleaseWait es: ' + _pleaseWait.toString());
+                                      final http.Response res = await http.post("$SERVER_IP/saveTransaction",
+                                          headers: <String, String>{
+                                            'Content-Type': 'application/json; charset=UTF-8',
+                                            'Authorization': jwt
+                                          },
+                                          body: jsonEncode(<String, dynamic>{
+                                            'company_id': payload['company_id'],
+                                            'persone_id': payload['empleado_id'],
+                                            'period_id': payload['period_id'],
+                                            'bank_account_id': payload['bank_account_id'],
+                                            'salario_acumulado': payload['salario_acumulado'],
+                                            //'salario_acumulado': customListItemKey.currentState.puedesRetirar,
+                                            'max_permitido': payload['max_permitido'],
+                                            'extracted_amount': _amountToDetray.text,
+                                            'comision': payload['comision'],
+                                            'acct_no': payload['acct_no']
+                                          })
+                                      );
+                                      if (res.statusCode == 200) {
+                                        // He de variar la cantidad que puedes retirar de la pantalla
+                                        print('Justo antes de llamar por segunda vez _showPleaseWait');
+                                        print('El valor de pleaseWait es: ' + _pleaseWait.toString());
+                                        _showPleaseWait(false);
+                                        print('Justo después de llamar a _showPleaseWait');
+                                        print('El valor de pleaseWait es: ' + _pleaseWait.toString());
+                                        print('El retiro ha sido hecho con retorno 200');
+                                        customListItemKey.currentState.setState(() {
+                                          customListItemKey.currentState.puedesRetirar = customListItemKey.currentState.puedesRetirar - int.parse(_amountToDetray.text);
+                                        });
+                                        setState(() {
+                                          _puedesRetirar = customListItemKey.currentState.puedesRetirar;
+                                          payload['max_permitido'] = _puedesRetirar;
+                                          _expandFlag = false;
+                                        });
+                                        _amountToDetray.text = "0";
+                                        print('Después de el http.post');
+                                        final retorno = Map();
+                                        retorno['day'] = json.decode(res.body)['day'];
+                                        retorno['extracted_amount'] = json.decode(res.body)['extracted_amount'];
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => DetalleRetiro.fromBase64(jwt, json.decode(res.body)),
+                                              fullscreenDialog: false,
+                                            )
+                                        );
+                                      } else if (res.statusCode == 404) {
+                                        _showPleaseWait(false);
+                                        // Como retorno que le token no es valido retorno a la página de Login
+                                        Navigator.pop(context);
+                                        //_showSnackBar(json.decode(res.body)['message'], error: false);
+                                      } else {
+                                        _showPleaseWait(false);
+                                        _showSnackBar(json.decode(res.body)['message'], error: false);
+                                      }
+                                    }
+                                  } else {
+                                    _showPleaseWait(false);
+                                    _showSnackBar('El retiro no puede ser superior a ' + customListItemKey.currentState.puedesRetirar.toString() + '.', error: false);
+                                  }
+                                } else {
+                                  _showPleaseWait(false);
+                                  _showSnackBar('El retiro ha de ser superior a 0.', error: false);
+                                }
+                              } catch (e) {
+                                _showPleaseWait(false);
+                                _showSnackBar(e.toString(), error: false);
+                                print('Error' + e.toString());
+                              }
+                            },
+                            disabledColor: secondaryLightColor,
+                            disabledTextColor: secondaryTextColor,
+                            splashColor: Colors.blueAccent,
+                            child: Text (
+                              'RETIRAR',
+                              style: TextStyle (fontSize: 20.0),
+                            ),
+                          ),
+                        )
+                    )
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ]
     );
+    Widget bodyWidget = _pleaseWait
+        ? Stack(key: ObjectKey("stack"), children: [_pleaseWaitWidget, builder])
+        : Stack(key: ObjectKey("stack"), children: [builder]);
+    print ('Paso por el build de después de _pleaseWait. El valor de _pleaseWait es: ' + _pleaseWait.toString());
+    return new Padding(
+                padding: const EdgeInsets.fromLTRB(15.0, 5.0, 20.0, 5.0),
+                child: bodyWidget,
+            );
   }
 }
-class _CustomListItem extends StatelessWidget {
-  const _CustomListItem({
+class _CustomListItem extends StatefulWidget {
+  _CustomListItem({
+    Key key,
     this.user,
     this.saldoAcumulado,
     this.puedesRetirar,
     this.diasAlaNomina,
-  });
-
+  }): super (key: key);
   final String user;
   final int saldoAcumulado;
-  final int puedesRetirar;
+  int puedesRetirar;
   final int diasAlaNomina;
-
+  @override
+  _CustomListItemState createState(){
+    return _CustomListItemState (user, saldoAcumulado, puedesRetirar, diasAlaNomina);
+  }
+}
+class _CustomListItemState extends State {
+  _CustomListItemState(
+    this.user,
+    this.saldoAcumulado,
+    this.puedesRetirar,
+    this.diasAlaNomina
+  );
+  final String user;
+  final int saldoAcumulado;
+  int puedesRetirar;
+  final int diasAlaNomina;
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -459,11 +760,109 @@ class _CustomListItem extends StatelessWidget {
         children: <Widget>[
           Expanded(
             flex: 8,
-            child: _UserDescription(
-              user: user,
-              saldoAcumulado: saldoAcumulado,
-              puedesRetirar: puedesRetirar,
-              diasAlaNomina: diasAlaNomina,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(5.0, 0.0, 5.0, 0.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Text(
+                        user,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 26.0,
+                            color: Colors.black
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(
+                    color: Colors.black,
+                    height: 20,
+                    thickness: 5,
+                    indent: 20,
+                    endIndent: 0,
+                  ),
+                  Row(
+//              crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      Column(
+                        children: <Widget>[
+                          Text(
+                            new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(saldoAcumulado),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 22.0,
+                              color: Colors.black,
+                            ),
+                          ),
+                          Text(
+                              'Saldo acumulado',
+                              style: const TextStyle(
+                                fontSize: 10.0,
+                                color: Colors.black,
+                              )
+                          ),
+                        ],
+                      ),
+                      VerticalDivider(),
+                      Column(
+                        children: <Widget>[
+                          Text(
+                            new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(puedesRetirar),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 22.0,
+                              color: Colors.black,
+                            ),
+                          ),
+                          Text(
+                              'Puedes Retirar',
+                              style: const TextStyle(
+                                fontSize: 10.0,
+                                color: Colors.black,
+                              )
+                          ),
+                        ],
+                      ),
+                      VerticalDivider(),
+                      Column(
+                        children: <Widget>[
+                          Text.rich(
+                              TextSpan(
+                                  text: diasAlaNomina.toString(),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 22.0,
+                                    color: Colors.black,
+                                  ),
+                                  children: <TextSpan>[
+                                    TextSpan(
+                                        text: ' días',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 10.0,
+                                          color: Colors.black,
+                                        )
+                                    )
+                                  ]
+                              )
+                          ),
+                          Text(
+                              'a la nómina',
+                              style: const TextStyle(
+                                fontSize: 10.0,
+                                color: Colors.black,
+                              )
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
           const Icon(
@@ -475,20 +874,37 @@ class _CustomListItem extends StatelessWidget {
     );
   }
 }
-class _UserDescription extends StatelessWidget {
-  const _UserDescription({
-    Key key,
+class _UserDescription extends StatefulWidget {
+  _UserDescription({
     this.user,
     this.saldoAcumulado,
     this.puedesRetirar,
     this.diasAlaNomina,
-  }) : super(key: key);
+  });
 
   final String user;
   final int saldoAcumulado;
-  final int puedesRetirar;
+  int puedesRetirar;
   final int diasAlaNomina;
 
+  @override
+  _UserDescriptionState createState() {
+    return _UserDescriptionState(
+        user, saldoAcumulado, puedesRetirar, diasAlaNomina);
+  }
+}
+class _UserDescriptionState extends State {
+  _UserDescriptionState (
+      this.user,
+      this.saldoAcumulado,
+      this.puedesRetirar,
+      this.diasAlaNomina,
+  );
+
+  final String user;
+  final int saldoAcumulado;
+  int puedesRetirar;
+  final int diasAlaNomina;
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -496,90 +912,193 @@ class _UserDescription extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-            Row(
-                children: <Widget>[
-                  Text(
-                  user,
-                  style: const TextStyle(
+          Row(
+            children: <Widget>[
+              Text(
+                user,
+                style: const TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 26.0,
                     color: Colors.black
-                  ),
                 ),
-              ],
-            ),
-            const Divider(
-              color: Colors.black,
-              height: 20,
-              thickness: 5,
-              indent: 20,
-              endIndent: 0,
-            ),
-            Row(
+              ),
+            ],
+          ),
+          const Divider(
+            color: Colors.black,
+            height: 20,
+            thickness: 5,
+            indent: 20,
+            endIndent: 0,
+          ),
+          Row(
 //              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                Column(
-                  children: <Widget>[
-                    Text(
-                      new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(saldoAcumulado),
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              Column(
+                children: <Widget>[
+                  Text(
+                    new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(saldoAcumulado),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 22.0,
+                      color: Colors.black,
+                    ),
+                  ),
+                  Text(
+                      'Saldo acumulado',
                       style: const TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 22.0,
+                        fontSize: 10.0,
                         color: Colors.black,
-                      ),
+                      )
+                  ),
+                ],
+              ),
+              VerticalDivider(),
+              Column(
+                children: <Widget>[
+                  Text(
+                    new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(puedesRetirar),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 22.0,
+                      color: Colors.black,
                     ),
-                    Text(
-                        'Saldo acumulado',
-                        style: const TextStyle(
-                          fontSize: 10.0,
-                          color: Colors.black,
-                        )
-                    ),
-                  ],
-                ),
-                VerticalDivider(),
-                Column(
-                  children: <Widget>[
-                    Text(
-                      new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(puedesRetirar),
+                  ),
+                  Text(
+                      'Puedes Retirar',
                       style: const TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 22.0,
+                        fontSize: 10.0,
                         color: Colors.black,
-                      ),
-                    ),
-                    Text(
-                        'Puedes Retirar',
-                        style: const TextStyle(
-                          fontSize: 10.0,
-                          color: Colors.black,
-                        )
-                    ),
-                  ],
-                ),
-                VerticalDivider(),
-                Column(
-                  children: <Widget>[
-                    Text(
-                      diasAlaNomina.toString(),
-                      style: const TextStyle (
-                        fontWeight: FontWeight.w500,
-                        fontSize: 22.0,
+                      )
+                  ),
+                ],
+              ),
+              VerticalDivider(),
+              Column(
+                children: <Widget>[
+                  Text.rich(
+                      TextSpan(
+                          text: diasAlaNomina.toString(),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 22.0,
+                            color: Colors.black,
+                          ),
+                          children: <TextSpan>[
+                            TextSpan(
+                                text: ' días',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 10.0,
+                                  color: Colors.black,
+                                )
+                            )
+                          ]
+                      )
+                  ),
+                  Text(
+                      'a la nómina',
+                      style: const TextStyle(
+                        fontSize: 10.0,
                         color: Colors.black,
-                      ),
+                      )
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DetallesExtraccion extends StatelessWidget{
+  const _DetallesExtraccion({
+    this.banco,
+    this.cuenta,
+    this.cuota
+  });
+  final String banco;
+  final String cuenta;
+  final int cuota;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 1200,
+      child: Column(
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.account_balance,
+                      color: Colors.black,
                     ),
-                    Text(
-                        'A la nómina',
-                        style: const TextStyle(
-                          fontSize: 10.0,
-                          color: Colors.black,
-                        )
+                  )
+              ),
+              Expanded(
+                  child: Text(
+                      'Banco'
+                  )
+              ),
+              Expanded(
+                  flex: 2,
+                  child: Text(
+                    banco,
+                  ),
+              ),
+            ],
+          ),
+          Row(
+            children: <Widget>[
+              Expanded(
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.closed_caption,
+                      color: Colors.black,
                     ),
-                  ],
-                ),
-              ],
-            ),
+                  )
+              ),
+              Expanded(
+                  child: Text(
+                      'Cuenta'
+                  )
+              ),
+              Expanded(
+                  flex: 2,
+                  child: Text(
+                    cuenta,
+                  )
+              ),
+            ],
+          ),
+          Row(
+            children: <Widget>[
+              Expanded(
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.loop,
+                      color: Colors.black,
+                    ),
+                  )
+              ),
+              Expanded(
+                  child: Text(
+                      'Cuota'
+                  )
+              ),
+              Expanded(
+                  flex: 2,
+                  child: Text(
+                    cuota == 0 ? 'GRATUITA' : new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(cuota),
+                  )
+              ),
+            ],
+          )
         ],
       ),
     );
@@ -596,43 +1115,136 @@ class VerticalDivider extends StatelessWidget {
     );
   }
 }
-class _UserOperationData {
-  int empleado_id;
-  int company_id;
-  String persone_name;
-  String email;
-  String empresa;
-  int salario_acumulado;
-  int dias_nomina;
-  int max_permitido;
-  int periodo_id;
-  int bank_account_id;
-  int comision;
-  int ban_bloqueo;
-  int fch_desbloqueo;
-  int digitalnip;
-  int status;
-  String mensaje;
-  _UserOperationData ({this.empleado_id, this.company_id, this.persone_name, this.email, this.empresa,
-      this.salario_acumulado, this.dias_nomina, this.max_permitido, this.periodo_id, this.bank_account_id,
-      this.comision, this.ban_bloqueo, this.fch_desbloqueo, this.digitalnip, this.status, this.mensaje});
-  // ignore: missing_return
-  factory _UserOperationData.fromJson(Map<String, dynamic> json) {
-    return _UserOperationData(
-      empleado_id: json['empleado_id'],
-      company_id: json['company_id'],
-      persone_name: json['persone_name'],
-      email: json['email'],
-      empresa: json['empresa'],
-      salario_acumulado: json['salario_acumulado'],
-      dias_nomina: json['dias_nomina'],
-      max_permitido: json['max_permitido'],
-      periodo_id: json['periodo_id'],
-      bank_account_id: json['bank_account_id'],
-      comision: json['comision'],
-      ban_bloqueo: json['ban_bloqueo'],
-      fch_desbloqueo: json['fch_desbloqueo'],
-      digitalnip: json['digitalnip']
+class _CircularValueShape extends SliderComponentShape{
+  //The radius of the value indicator
+  final double radius;
+  //The border thickness of the value indicator
+  final double borderThickness;
+  //the value of the slider
+  final double _value;
+
+  const _CircularValueShape(this._value, {this.radius = 6.0, this.borderThickness = 2});
+
+  @override
+  Size getPreferredSize(bool isEnabled, bool isDiscrete) {
+    return Size.fromRadius(radius);
+  }
+  @override
+  void paint
+    (
+      PaintingContext context,
+      Offset center,
+      {
+        Animation<double> activationAnimation,
+        Animation<double> enableAnimation,
+        bool isDiscrete,
+        TextPainter labelPainter,
+        RenderBox parentBox,
+        SliderThemeData sliderTheme,
+        TextDirection textDirection,
+        double value
+      }
+    )
+  {
+    final Canvas canvas = context.canvas;
+
+    final fillPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final borderPaint = Paint()
+      //..color = sliderTheme.thumbColor
+      ..color = Colors.white
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    //creating the textStyle
+    final textStyle = TextStyle(
+      color: Colors.black,
+      fontSize: 15,
+      fontWeight: FontWeight.bold,
     );
+    //creating the text span
+    final textSpan = TextSpan(
+      //text: _value.toInt().toString(),
+      text: 'Hola',
+      style: textStyle,
+    );
+    //creating the text painter
+    final textPainter = TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    );
+    textPainter.layout(
+      minWidth: 0,
+      maxWidth: 50,
+    );
+
+    //creating the tooltip position
+    Offset toolTipOffset = Offset(center.dx, center.dy - radius - 30);
+
+    //creating the text position
+    Offset textOffset =
+    Offset(toolTipOffset.dx - textPainter.width / 2, toolTipOffset.dy - 10);
+
+    canvas.drawCircle(toolTipOffset, radius, fillPaint);
+    canvas.drawCircle(toolTipOffset, radius, borderPaint);
+
+    //painting the text
+    textPainter.paint(canvas, textOffset);
+
+  }
+}
+class _RoundedRectangleThumbShape extends SliderComponentShape {
+  final double thumbRadius;
+  final double thickness;
+  final double roundness;
+
+  const _RoundedRectangleThumbShape(
+      {this.thumbRadius = 6.0, this.thickness = 2, this.roundness = 6.0});
+
+  @override
+  Size getPreferredSize(bool isEnabled, bool isDiscrete) {
+    return Size.fromRadius(thumbRadius);
+  }
+
+  @override
+  void paint(
+      PaintingContext context,
+      Offset center, {
+        Animation<double> activationAnimation,
+        Animation<double> enableAnimation,
+        bool isDiscrete,
+        TextPainter labelPainter,
+        RenderBox parentBox,
+        SliderThemeData sliderTheme,
+        TextDirection textDirection,
+        double value,
+      }) {
+    final Canvas canvas = context.canvas;
+
+    final rect = Rect.fromCircle(center: center, radius: thumbRadius);
+
+    final roundedRectangle = RRect.fromRectAndRadius(
+      Rect.fromPoints(
+        Offset(rect.left - 1, rect.top),
+        Offset(rect.right + 1, rect.bottom),
+      ),
+      Radius.circular(roundness),
+    );
+
+    final fillPaint = Paint()
+      ..color = Colors.black
+      ..style = PaintingStyle.fill;
+
+    final borderPaint = Paint()
+      //      ..color = sliderTheme.thumbColor
+      ..color = Colors.white
+      ..strokeWidth = thickness
+      ..style = PaintingStyle.stroke;
+
+    canvas.drawRRect(roundedRectangle, fillPaint);
+    canvas.drawRRect(roundedRectangle, borderPaint);
   }
 }
