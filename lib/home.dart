@@ -129,12 +129,8 @@ class _HomePageState extends State<HomePage> {
       _selectedIndex = index;
     });
   }
-  // TODO: Make a collection of cards (102)
-  // TODO: Add a variable for Category (104)
   @override
   Widget build(BuildContext context) {
-    // TODO: Return an AsymmetricView (104)
-    // TODO: Pass Category variable to AsymmetricView (104)
     // Aqui hago la consulta para obtener los datos que voy a necesitar en la pantalla
     //var datosOperativaCliente = getDataOperation(personeId);
     //print (datosOperativaCliente);
@@ -145,7 +141,6 @@ class _HomePageState extends State<HomePage> {
     print('ESTOY EN HOME.dart');
     return Scaffold(
       key: _scaffoldKey,
-      // TODO: Add app bar (102)
       appBar: AppBar(
         leading: Builder(
             builder: (BuildContext context){
@@ -162,7 +157,6 @@ class _HomePageState extends State<HomePage> {
         ),
         backgroundColor: primaryDarkColor,
 //        textTheme: ,
-        // TODO: Add buttons and title (102)
         title: Text('BLUP',
           style: TextStyle(
             color: Colors.white,
@@ -183,7 +177,6 @@ class _HomePageState extends State<HomePage> {
       ),
       body: ListView(
         padding: EdgeInsets.all(2.0),
-        // TODO: Build a grid of cards (102)
         children: <Widget>[
           Card(
             clipBehavior: Clip.antiAlias,
@@ -307,9 +300,49 @@ class _HomePageState extends State<HomePage> {
         selectedItemColor: kBlupErrorRed,
         onTap: _onItemTapped,
       ),
-      // TODO: Set resizeToAvoidBottomInset (101)
     );
 
+  }
+}
+class _ProductsAvailWidget extends StatelessWidget {
+  _ProductsAvailWidget({
+    Key key,
+  }) : super(key: key);
+  Widget build(BuildContext context) {
+    return new Container(
+      child: Center(
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          children: <Widget>[
+            Card(
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  AspectRatio(
+                    aspectRatio: 18.0/11.0,
+                    child: Image.asset('assets/amazon.png'),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text('Amazon'),
+                        SizedBox(height: 8.0),
+                        Text('Secondary Text'),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            ),
+            Card(),
+            Card()
+          ],
+        )
+      ),
+    );
   }
 }
 class _CustomAmountPermitedDetray extends StatefulWidget{
