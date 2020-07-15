@@ -24,6 +24,7 @@ import 'reset.dart';
 import 'validateResetPass.dart';
 import 'colors.dart';
 import 'utils/util.dart';
+import 'global.dart';
 
 final storage = FlutterSecureStorage();
 
@@ -43,30 +44,30 @@ class BlupApp extends StatelessWidget {
       home: FutureBuilder (
           future: _jwtOrEmpty(),
           builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return PleaseWaitWidget();
-          } else {
-            if (snapshot.data != "No existe Token") {
-              var str = snapshot.data;
-              var jwt = str.split(".");
-              if (jwt.length != 3) {
-                return LoginPage();
-              } else {
-                var payload = json.decode(utf8.decode(base64.decode(base64.normalize(jwt[1]))));
-                print("Antes de imprimir el payload");
-                print(payload);
-                if (DateTime.fromMillisecondsSinceEpoch(payload["exp"]*1000).isAfter(DateTime.now())) {
-                  print("El token es válido aun");
-                  return HomePage();
-                } else {
-                  return LoginPage();
-                }
-              }
+            if (!snapshot.hasData) {
+              return PleaseWaitWidget();
             } else {
-              return LoginPage();
+              if (snapshot.data != "No existe Token") {
+                var jwt = snapshot.data;
+                var  str = jwt.split(".");
+                if (str.length != 3) {
+                  return LoginPage();
+                } else {
+                  var payload = json.decode(utf8.decode(base64.decode(base64.normalize(str[1]))));
+                  print("Antes de imprimir el payload");
+                  print(payload);
+                  if (DateTime.fromMillisecondsSinceEpoch(payload["exp"]*1000).isAfter(DateTime.now())) {
+                    print("El token es válido aun");
+                    return HomePage.fromBase64(jwt);
+                  } else {
+                    return LoginPage();
+                  }
+                }
+              } else {
+                return LoginPage();
+              }
             }
           }
-        }
       ),
       //initialRoute: '/login',
       // TODO: Make currentCategory field take _currentCategory (104)
