@@ -212,27 +212,7 @@ class _HomePageState extends State<HomePage> {
           ),
           Card(
             clipBehavior: Clip.antiAlias,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Center(
-                    child: Container(
-                      margin: EdgeInsets.all(30),
-                      padding: EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.yellow,
-                        border: Border.all(color: Colors.black),
-                      ),
-                      child: Text(
-                        "Folios",
-                        style: TextStyle(
-                          fontSize: 50.0,
-                        ),
-                      ),
-                    )
-                ),
-              ],
-            ),
+            child: _ProductsAvailWidget(payload),
           ),
         ],
       ),
@@ -304,44 +284,106 @@ class _HomePageState extends State<HomePage> {
 
   }
 }
-class _ProductsAvailWidget extends StatelessWidget {
-  _ProductsAvailWidget({
-    Key key,
-  }) : super(key: key);
-  Widget build(BuildContext context) {
-    return new Container(
-      child: Center(
-        child: ListView(
-          scrollDirection: Axis.horizontal,
-          children: <Widget>[
-            Card(
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  AspectRatio(
-                    aspectRatio: 18.0/11.0,
-                    child: Image.asset('assets/amazon.png'),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text('Amazon'),
-                        SizedBox(height: 8.0),
-                        Text('Secondary Text'),
-                      ],
+class _ProductsAvailWidget extends StatefulWidget {
+  final Map<String, dynamic> payload;
+
+  _ProductsAvailWidget(this.payload);
+
+  @override
+  _ProductsAvail_State createState() {
+    return _ProductsAvail_State(
+        payload);
+  }
+}
+class _ProductsAvail_State extends State {
+  final Map<String, dynamic> payload;
+  @override
+  _ProductsAvail_State (this.payload);
+
+  Widget _myListView (BuildContext context) {
+    //print ('Entro donde debería. En la función _myListView: ' + payload['productsAvail'].length.toString());
+    print ('Entro por donde debía: ' + payload['acct_no']);
+    print ('Entro por donde debía: ' + '${payload}');
+    return ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: payload['productsAvail'].length,
+        itemBuilder: (context, index) {
+          return Card(
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.only(left: 10),
+                  child: Container(
+                    height: 60,
+                    child: AspectRatio(
+                      aspectRatio: 3.0 / 2.0,
+                      child: Image.asset('assets/' + payload['productsAvail'][index]['IMAGE']),
                     ),
-                  )
-                ],
-              ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        'Precio: \$ ' + payload['productsAvail'][index]['PRODUCT_PRICE'],
+                        style: TextStyle(
+                          color: secondaryTextColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(height: 2.0),
+                      Text(
+                        'Comisión: \$ ' + payload['productsAvail'][index]['COMISSION'],
+                        style: TextStyle(
+                          color: secondaryTextColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(height: 2.0),
+                      Text(
+                        'Disponibles: ' + payload['productsAvail'][index]['AVAIL'],
+                        style: TextStyle(
+                          color: secondaryTextColor,
+                          //fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              ],
             ),
-            Card(),
-            Card()
+          );
+        }
+    );
+  }
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Flexible(
+              child: Center(
+                  child: Container(
+                    margin: EdgeInsets.all(5),
+                    //padding: EdgeInsets.all(10),
+                    //width: 300,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      //border: Border.all(color: Colors.black),
+                    ),
+                    child: _myListView(context),
+                  )
+              ),
+            )
           ],
-        )
-      ),
+        ),
+      ],
     );
   }
 }
@@ -512,17 +554,23 @@ class _SliderAmountPermitedDetrayState extends State {
                     //keyboardType: _tecladoNumerico ? TextInputType.number : TextInputType.emailAddress,
                     keyboardType: TextInputType.text,
                     onFieldSubmitted: (text) {
-                      print('La cantidad que se ha escrito es: ' + _amountToDetray.text);
+                      //print('La cantidad que se ha escrito es: ' + _amountToDetray.text);
                       var importe = int.parse(text);
-                      print('La cantidad cruda es:' + _rating.toString());
-                      print('El maximo que puedes retirar es: ' + _puedesRetirar.toString());
-                      if (importe > _puedesRetirar) {
-                        _showSnackBar('El monto a retirar no puede ser mayor a ' + _f.format(_puedesRetirar) + ' pesos.', error: false);
+                      //print('La cantidad cruda es:' + _rating.toString());
+                      //print('El maximo que puedes retirar es: ' + _puedesRetirar.toString());
+                      if (_puedesRetirar == 0) {
+                        _showSnackBar('No puede realizar ningún retiro mas. Ha agotado su saldo.' , error: false);
+                      } else if ((_puedesRetirar == 0) && (customListItemKey.currentState.saldoAcumulado == 0)) {
+                        _showSnackBar('No puede realizar ningún retiro. Estamos en la fecha de ajuste.', error: false);
                       }
-                      print('Después de llamar al _show');
-                      setState(() {
-                        _expandFlag = !_expandFlag;
-                      });
+                      else if (importe > _puedesRetirar) {
+                        _showSnackBar('El monto a retirar no puede ser mayor a ' + _f.format(_puedesRetirar) + ' pesos.', error: false);
+                      } else {
+                        setState(() {
+                          _expandFlag = !_expandFlag;
+                        });
+                      }
+                      //print('Después de llamar al _show');
                     },
                     style: const TextStyle(
                       color: Colors.black,
