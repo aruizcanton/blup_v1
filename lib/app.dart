@@ -24,7 +24,6 @@ import 'reset.dart';
 import 'validateResetPass.dart';
 import 'colors.dart';
 import 'utils/util.dart';
-import 'global.dart';
 
 final storage = FlutterSecureStorage();
 
