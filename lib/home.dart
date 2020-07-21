@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import 'package:flutter/material.dart';
-import 'colors.dart';
 import 'dart:convert';
-import 'utils/util.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:intl/intl.dart' show NumberFormat hide TextDirection;
-import 'detalleRetiro.dart';
-import 'package:flutter_xlider/flutter_xlider.dart';
+
+import 'package:blupv1/colors.dart';
+import 'package:blupv1/utils/util.dart';
+import 'package:blupv1/detalleRetiro.dart';
+import 'package:blupv1/bloc/cartProductsBloc.dart';
+//import 'package:flutter_xlider/flutter_xlider.dart';
 //import 'package:keyboard_actions/keyboard_actions.dart';
 
 class HomePage extends StatefulWidget {
@@ -291,8 +292,7 @@ class _ProductsAvailWidget extends StatefulWidget {
 
   @override
   _ProductsAvail_State createState() {
-    return _ProductsAvail_State(
-        payload);
+    return _ProductsAvail_State(payload);
   }
 }
 class _ProductsAvail_State extends State {
@@ -300,59 +300,211 @@ class _ProductsAvail_State extends State {
   @override
   _ProductsAvail_State (this.payload);
 
-  Widget _myListView (BuildContext context) {
+  //bool _visibleButttonAgr = true;
+  var _visibleButttonAgr = List<bool>();
+  var _amountItems = List<TextEditingController>();
+  int _importeProductos;
+  int _importeComision;
+  int _importeTotal;
+  @override
+  void initState(){
+    super.initState();
+    for (var i = 0; i< bloc.numberShopItems(); i++){
+      _visibleButttonAgr.add(true);
+      _amountItems.add(new TextEditingController());
+    }
+    _importeProductos = 0;
+    _importeComision = 0;
+    _importeTotal = 0;
+  }
+
+  @override
+  void dispose (){
+    for (var i = 0; i< bloc.numberShopItems(); i++){
+      _amountItems[i].dispose();
+    }
+    super.dispose();
+  }
+
+  Widget _myListView (snapshot) {
     //print ('Entro donde debería. En la función _myListView: ' + payload['productsAvail'].length.toString());
     print ('Entro por donde debía: ' + payload['acct_no']);
     print ('Entro por donde debía: ' + '${payload}');
+    print ('Dentro de _myListView');
+    print (snapshot.data["shopItems"]);
+    //_visibleButttonAgr = true;
     return ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: payload['productsAvail'].length,
-        itemBuilder: (context, index) {
+        itemCount: snapshot.data["shopItems"].length,
+        itemBuilder: (BuildContext context, index) {
+          final shopList = snapshot.data["shopItems"];
           return Card(
             clipBehavior: Clip.antiAlias,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.only(left: 10),
-                  child: Container(
-                    height: 60,
-                    child: AspectRatio(
-                      aspectRatio: 3.0 / 2.0,
-                      child: Image.asset('assets/' + payload['productsAvail'][index]['IMAGE']),
+                Row(
+                  children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.only(left: 10),
+                      child: Container(
+                        height: 60,
+                        child: AspectRatio(
+                          aspectRatio: 3.0 / 2.0,
+                          child: Image.asset('assets/' + shopList[index]['image']),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        'Precio: \$ ' + payload['productsAvail'][index]['PRODUCT_PRICE'],
-                        style: TextStyle(
-                          color: secondaryTextColor,
-                          fontWeight: FontWeight.w500,
-                        ),
+                Row(
+                  children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(12.0, 4.0, 12.0, 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Row(
+                            children: <Widget>[
+                              Text(
+                                'Precio: \$ ' + shopList[index]['product_price'],
+                                style: TextStyle(
+                                  color: secondaryTextColor,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 2.0),
+                          Row(
+                            children: <Widget>[
+                              Text(
+                                'Comisión: \$ ' + shopList[index]['comission'],
+                                style: TextStyle(
+                                  color: secondaryTextColor,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 2.0),
+                          Row(
+                            children: <Widget>[
+                              Text(
+                                'Disponibles: ' + shopList[index]['avail'],
+                                style: TextStyle(
+                                  color: secondaryTextColor,
+                                  //fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 2.0),
+                          Row(
+                            children: <Widget>[
+                              Visibility(
+                                visible: _visibleButttonAgr[index],
+                                child: Column(
+                                  children: <Widget>[
+                                    FlatButton (
+                                      color: primaryDarkColor,
+                                      textColor: Colors.white,
+                                      padding: EdgeInsets.all(8.0),
+                                      onPressed: () {
+                                        setState(() {
+                                          _visibleButttonAgr[index] = false;
+                                          _amountItems[index].text = "0";
+                                        });
+                                      },
+                                      disabledColor: secondaryLightColor,
+                                      disabledTextColor: secondaryTextColor,
+                                      splashColor: Colors.blueAccent,
+                                      child: Text (
+                                        'Agregar',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                replacement: Container(
+                                  width: 100,
+                                  child: Row(
+                                    children: <Widget>[
+                                      Expanded(
+                                        flex: 1,
+                                        child: FlatButton(
+                                          color: primaryDarkColor,
+                                          textColor: Colors.white,
+                                          onPressed: (){
+                                            if (int.parse(_amountItems[index].text) > 0) {
+                                              _amountItems[index].text = (int.parse(_amountItems[index].text) - 1).toString();
+                                              setState(() {
+                                                _importeProductos = _importeProductos - int.parse(shopList[index]['product_price']);
+                                                _importeComision = _importeComision - int.parse(shopList[index]['comission']);
+                                                _importeTotal = _importeProductos - _importeComision;
+                                              });
+                                              bloc.removeFromCart(shopList[index]);
+                                            }
+                                          },
+                                          disabledColor: secondaryLightColor,
+                                          child: Text(
+                                            '-',
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 1,
+                                        child: FlatButton(
+                                          color: primaryDarkColor,
+                                          textColor: Colors.white,
+                                          onPressed: (){
+                                            //bloc.addToCart(index);
+                                            if (int.parse(_amountItems[index].text) < int.parse(shopList[index]['avail'])) {
+                                              print('Antes de hacer el incremento. Estoy dentro del botón +');
+                                              _amountItems[index].text = (int.parse(_amountItems[index].text) + 1).toString();
+                                              print('Después de hacer el incremento. Estoy dentro del botón +');
+                                              setState(() {
+                                                _importeProductos = _importeProductos + int.parse(shopList[index]['product_price']);
+                                                _importeComision = _importeComision + int.parse(shopList[index]['comission']);
+                                                _importeTotal = _importeProductos + _importeComision;
+                                              });
+
+                                              bloc.addToCart(shopList[index]);
+                                            }
+                                          },
+                                          disabledColor: secondaryLightColor,
+                                          child: Text(
+                                            '+',
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                          flex: 1,
+                                          child: Container(
+                                              alignment: Alignment.center,
+                                              child:
+                                              TextField (
+                                                controller: _amountItems[index],
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle (
+                                                  color: Colors.black,
+                                                  fontSize: 16.0,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              )
+                                          )
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 2.0),
-                      Text(
-                        'Comisión: \$ ' + payload['productsAvail'][index]['COMISSION'],
-                        style: TextStyle(
-                          color: secondaryTextColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      SizedBox(height: 2.0),
-                      Text(
-                        'Disponibles: ' + payload['productsAvail'][index]['AVAIL'],
-                        style: TextStyle(
-                          color: secondaryTextColor,
-                          //fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 )
               ],
             ),
@@ -361,29 +513,152 @@ class _ProductsAvail_State extends State {
     );
   }
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Flexible(
-              child: Center(
-                  child: Container(
-                    margin: EdgeInsets.all(5),
-                    //padding: EdgeInsets.all(10),
-                    //width: 300,
-                    height: 150,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      //border: Border.all(color: Colors.black),
-                    ),
-                    child: _myListView(context),
+    return Padding (
+      padding: const EdgeInsets.symmetric(vertical: 5.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Expanded(
+            flex: 8,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(2.0, 0.0, 5.0, 0.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Flexible(
+                        child: Center(
+                            child: Container(
+                              margin: EdgeInsets.all(5),
+                              //padding: EdgeInsets.all(10),
+                              //width: 300,
+                              height: 200,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                //border: Border.all(color: Colors.black),
+                              ),
+                              child: StreamBuilder(
+                                initialData: bloc.allItems,
+                                stream: bloc.getStream,
+                                builder: (context, snapshot) {
+                                  return snapshot.data["shopItems"].length > 0
+                                      ? _myListView(snapshot)
+                                      : Center(child: Text("All items in shop have been taken"));
+                                },
+                              ),
+                            )
+                        ),
+                      )
+                    ],
+                  ),
+                  const Divider(
+                    color: Colors.black,
+                    height: 20,
+                    thickness: 5,
+                    indent: 20,
+                    endIndent: 20,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      Column(
+                        children: <Widget>[
+                          Text(
+                            new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(_importeProductos),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 22.0,
+                              color: Colors.black,
+                            ),
+                          ),
+                          Text(
+                              'Productos',
+                              style: const TextStyle(
+                                fontSize: 10.0,
+                                color: Colors.black,
+                              )
+                          ),
+                        ],
+                      ),
+                      VerticalDivider(),
+                      Column(
+                        children: <Widget>[
+                          Text(
+                            new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(_importeComision),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 22.0,
+                              color: Colors.black,
+                            )
+                          ),
+                          Text(
+                              'Comisión',
+                              style: const TextStyle(
+                                fontSize: 10.0,
+                                color: Colors.black,
+                              )
+                          ),
+                        ],
+                      ),
+                      VerticalDivider(),
+                      Column(
+                        children: <Widget>[
+                          Text(
+                              new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(_importeTotal),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 22.0,
+                                color: Colors.black,
+                              )
+                          ),
+                          Text(
+                              'Total',
+                              style: const TextStyle(
+                                fontSize: 10.0,
+                                color: Colors.black,
+                              )
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const Divider(
+                    color: Colors.black,
+                    height: 20,
+                    thickness: 5,
+                    indent: 20,
+                    endIndent: 20,
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Expanded(
+                          child: Container(
+                            margin: EdgeInsets.fromLTRB(13, 5, 13, 5),
+                            child: FlatButton(
+                              color: primaryDarkColor,
+                              textColor: Colors.white,
+                              padding: EdgeInsets.all(8.0),
+                              onPressed: (){},
+                              disabledColor: secondaryLightColor,
+                              disabledTextColor: secondaryTextColor,
+                              splashColor: Colors.blueAccent,
+                              child: Text (
+                                'COMPRAR',
+                                style: TextStyle (fontSize: 20.0),
+                              ),
+                            ),
+                          ),
+                      )
+                    ],
                   )
+                ],
               ),
-            )
-          ],
-        ),
-      ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -597,7 +872,7 @@ class _SliderAmountPermitedDetrayState extends State {
             ],
           ),
           SizedBox(height: 2.0),
-          Row(
+          Row (
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               Expanded(
@@ -650,7 +925,7 @@ class _SliderAmountPermitedDetrayState extends State {
               )
             ],
           ),
-          ExpandableContainer(
+          ExpandableContainer (
             expanded: _expandFlag,
             expandedHeight: 100,
             child: new Column(
