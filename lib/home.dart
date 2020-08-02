@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import 'package:blupv1/detalleCompra.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -20,6 +21,7 @@ import 'package:blupv1/colors.dart';
 import 'package:blupv1/utils/util.dart';
 import 'package:blupv1/detalleRetiro.dart';
 import 'package:blupv1/bloc/cartProductsBloc.dart';
+import 'package:blupv1/model/purchasedProduct.dart';
 //import 'package:flutter_xlider/flutter_xlider.dart';
 //import 'package:keyboard_actions/keyboard_actions.dart';
 
@@ -213,7 +215,7 @@ class _HomePageState extends State<HomePage> {
           ),
           Card(
             clipBehavior: Clip.antiAlias,
-            child: _ProductsAvailWidget(payload),
+            child: _ProductsAvailWidget(payload, _scaffoldKey, _customListItemKey, payload['bank'], payload['acct_no'], jwt),
           ),
         ],
       ),
@@ -287,18 +289,27 @@ class _HomePageState extends State<HomePage> {
 }
 class _ProductsAvailWidget extends StatefulWidget {
   final Map<String, dynamic> payload;
-
-  _ProductsAvailWidget(this.payload);
+  final GlobalKey<ScaffoldState> scafoldKey;
+  final String banco;
+  final String cuenta;
+  final String jwt;
+  GlobalKey<_CustomListItemState> customListItemKey;
+  _ProductsAvailWidget(this.payload, this.scafoldKey, this.customListItemKey, this.banco, this.cuenta, this.jwt);
 
   @override
   _ProductsAvail_State createState() {
-    return _ProductsAvail_State(payload);
+    return _ProductsAvail_State(payload, scafoldKey, customListItemKey, banco, cuenta, jwt);
   }
 }
 class _ProductsAvail_State extends State {
   final Map<String, dynamic> payload;
+  final GlobalKey<ScaffoldState> scafoldKey;
+  final String banco;
+  final String cuenta;
+  final String jwt;
+  GlobalKey<_CustomListItemState> customListItemKey;
   @override
-  _ProductsAvail_State (this.payload);
+  _ProductsAvail_State (this.payload, this.scafoldKey, this.customListItemKey, this.banco, this.cuenta, this.jwt);
 
   //bool _visibleButttonAgr = true;
   var _visibleButttonAgr = List<bool>();
@@ -306,8 +317,11 @@ class _ProductsAvail_State extends State {
   int _importeProductos;
   int _importeComision;
   int _importeTotal;
+  bool _pleaseWait = false;
+  bool _confirmaRetiro = false;
+
   @override
-  void initState(){
+  void initState() {
     super.initState();
     for (var i = 0; i< bloc.numberShopItems(); i++){
       _visibleButttonAgr.add(true);
@@ -316,15 +330,70 @@ class _ProductsAvail_State extends State {
     _importeProductos = 0;
     _importeComision = 0;
     _importeTotal = 0;
+    _confirmaRetiro = false;
+    _pleaseWait = false;
   }
 
   @override
-  void dispose (){
+  void dispose () {
     for (var i = 0; i< bloc.numberShopItems(); i++){
       _amountItems[i].dispose();
     }
     super.dispose();
   }
+  _showPleaseWait(bool b) {
+    setState(() {
+      _pleaseWait = b;
+    });
+  }
+  _showSnackBar(String content, {bool error = false}) {
+    scafoldKey.currentState.showSnackBar(SnackBar(
+      content:
+      Text('${error ? "Ocurrió un error: " : ""}${content}'),
+    ));
+  }
+  void _displayDialog (BuildContext context, String title, String banco, String cuenta, int cuota) => showDialog (
+    context: context,
+    builder: (context) =>
+        AlertDialog (
+          title: Text(
+              'Compra: \$ ' + title,
+              textAlign: TextAlign.center
+          ),
+          content: _DetallesExtraccion(
+            banco: banco,
+            cuenta: cuenta,
+            cuota: cuota,
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text(
+                'Confirmar',
+              ),
+              onPressed: () {
+                setState(() {
+                  _confirmaRetiro = true;
+                });
+                Navigator.of(context).pop();
+              },
+              color: Colors.blue,
+            ),
+            FlatButton(
+              child: Text(
+                'Cancelar',
+              ),
+              onPressed: (){
+                setState(() {
+                  _confirmaRetiro = false;
+                });
+                Navigator.of(context).pop();
+              },
+              color: Colors.blue,
+            ),
+          ],
+          elevation: 24.0,
+        ),
+  );
 
   Widget _myListView (snapshot) {
     //print ('Entro donde debería. En la función _myListView: ' + payload['productsAvail'].length.toString());
@@ -367,7 +436,7 @@ class _ProductsAvail_State extends State {
                           Row(
                             children: <Widget>[
                               Text(
-                                'Precio: \$ ' + shopList[index]['product_price'],
+                                'Precio: \$ ' + (shopList[index]['product_price']).toString(),
                                 style: TextStyle(
                                   color: secondaryTextColor,
                                   fontWeight: FontWeight.w500,
@@ -379,7 +448,7 @@ class _ProductsAvail_State extends State {
                           Row(
                             children: <Widget>[
                               Text(
-                                'Comisión: \$ ' + shopList[index]['comission'],
+                                'Comisión: \$ ' + (shopList[index]['comission']).toString(),
                                 style: TextStyle(
                                   color: secondaryTextColor,
                                   fontWeight: FontWeight.w500,
@@ -391,7 +460,7 @@ class _ProductsAvail_State extends State {
                           Row(
                             children: <Widget>[
                               Text(
-                                'Disponibles: ' + shopList[index]['avail'],
+                                'Disponibles: ' + (shopList[index]['avail']).toString(),
                                 style: TextStyle(
                                   color: secondaryTextColor,
                                   //fontWeight: FontWeight.w500,
@@ -435,14 +504,22 @@ class _ProductsAvail_State extends State {
                                           color: primaryDarkColor,
                                           textColor: Colors.white,
                                           onPressed: (){
+                                            print('Antes de pasar el setState');
                                             if (int.parse(_amountItems[index].text) > 0) {
-                                              _amountItems[index].text = (int.parse(_amountItems[index].text) - 1).toString();
                                               setState(() {
-                                                _importeProductos = _importeProductos - int.parse(shopList[index]['product_price']);
-                                                _importeComision = _importeComision - int.parse(shopList[index]['comission']);
+                                                _importeProductos = _importeProductos - shopList[index]['product_price'];
+                                                _importeComision = _importeComision - shopList[index]['comission'];
                                                 _importeTotal = _importeProductos - _importeComision;
+                                                shopList[index]['avail'] = shopList[index]['avail'] +1;
+                                                if (int.parse(_amountItems[index].text) == 1) _visibleButttonAgr[index] = true;
                                               });
+                                              print('Después de pasar el setState');
+                                              _amountItems[index].text = (int.parse(_amountItems[index].text) - 1).toString();
                                               bloc.removeFromCart(shopList[index]);
+                                            } else {
+                                              setState(() {
+                                                _visibleButttonAgr[index] = true;
+                                              });
                                             }
                                           },
                                           disabledColor: secondaryLightColor,
@@ -459,14 +536,15 @@ class _ProductsAvail_State extends State {
                                           textColor: Colors.white,
                                           onPressed: (){
                                             //bloc.addToCart(index);
-                                            if (int.parse(_amountItems[index].text) < int.parse(shopList[index]['avail'])) {
+                                            if (int.parse(_amountItems[index].text) < shopList[index]['avail']) {
                                               print('Antes de hacer el incremento. Estoy dentro del botón +');
                                               _amountItems[index].text = (int.parse(_amountItems[index].text) + 1).toString();
                                               print('Después de hacer el incremento. Estoy dentro del botón +');
                                               setState(() {
-                                                _importeProductos = _importeProductos + int.parse(shopList[index]['product_price']);
-                                                _importeComision = _importeComision + int.parse(shopList[index]['comission']);
+                                                _importeProductos = _importeProductos + shopList[index]['product_price'];
+                                                _importeComision = _importeComision + shopList[index]['comission'];
                                                 _importeTotal = _importeProductos + _importeComision;
+                                                shopList[index]['avail'] = shopList[index]['avail'] - 1;
                                               });
 
                                               bloc.addToCart(shopList[index]);
@@ -640,7 +718,97 @@ class _ProductsAvail_State extends State {
                               color: primaryDarkColor,
                               textColor: Colors.white,
                               padding: EdgeInsets.all(8.0),
-                              onPressed: (){},
+                              onPressed: () async{
+                                try{
+                                  if (_importeTotal <= customListItemKey.currentState.puedesRetirar) {
+                                    await _displayDialog (context, _importeTotal.toString(), banco, cuenta, _importeComision);
+                                    print ('El valor de _confirmaretiro es: ' + _confirmaRetiro.toString());
+                                    if (_confirmaRetiro) {
+                                      print('He confirmado el retiro');
+                                      print('Justo antes de llamar a _showPleaseWait');
+                                      print('El valor de pleaseWait es: ' + _pleaseWait.toString());
+                                      _showPleaseWait(true);
+                                      print('Justo después de llamar a _showPleaseWait');
+                                      print('El valor de pleaseWait es: ' + _pleaseWait.toString());
+                                      final http.Response res = await http.post("$SERVER_IP/savePurchasedProducts",
+                                          headers: <String, String>{
+                                            'Content-Type': 'application/json; charset=UTF-8',
+                                            'Authorization': jwt
+                                          },
+                                          body: jsonEncode(<String, dynamic>{
+                                            'persone_id': payload['empleado_id'],
+                                            'company_id': payload['company_id'],
+                                            'period_id': payload['period_id'],
+                                            'bank_account_id': payload['bank_account_id'],
+                                            'salario_acumulado': payload['salario_acumulado'],
+                                            'max_permitido': customListItemKey.currentState.puedesRetirar,
+                                            'purchased_products': bloc.allItems['cartItems']
+                                          })
+                                      );
+                                      if (res.statusCode == 200) {
+                                        // He de variar la cantidad que puedes retirar de la pantalla
+                                        print('Justo antes de llamar por segunda vez _showPleaseWait');
+                                        print('El valor de pleaseWait es: ' + _pleaseWait.toString());
+                                        _showPleaseWait(false);
+                                        print('Justo después de llamar a _showPleaseWait');
+                                        print('El valor de pleaseWait es: ' + _pleaseWait.toString());
+                                        customListItemKey.currentState.setState(() {
+                                          customListItemKey.currentState.puedesRetirar = customListItemKey.currentState.puedesRetirar - _importeTotal;
+                                        });
+                                        print('Después de el http.post');
+                                        print(res.body);
+                                        final data = json.decode(res.body)['data'];
+                                        final parsed = json.decode(res.body)['data'].cast<Map<String, dynamic>>();
+                                        final purchasedProducts = parsed.map<PurchasedProduct>((json) => PurchasedProduct.fomJson(json)).toList();
+                                        final infoPurchased = Map<String, dynamic>();
+                                        infoPurchased['total_amount'] = _importeTotal;
+                                        infoPurchased['products_amount'] = _importeProductos;
+                                        infoPurchased['comission_amount'] = _importeComision;
+                                        print('El valor de importeTotal es: ' + _importeTotal.toString());
+                                        print('El valor de products_amount es: ' + _importeProductos.toString());
+                                        print('El valor de comission_amount es: ' + _importeComision.toString());
+                                        print('Justo antes de llamar al push');
+                                        for (var i = 0; i< purchasedProducts.length; i++){
+                                            print(purchasedProducts[i].order_id);
+                                        };
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => DetalleCompra(jwt, payload, purchasedProducts, infoPurchased),
+                                            fullscreenDialog: false,
+                                          )
+                                        );
+                                        print('Después de regresar de la pantalla de información');
+                                        // Regreso de la pantalla de información
+                                        for (var i = 0; i < bloc.allItems['shopItems'].length; i++){
+                                          setState(() {
+                                            _visibleButttonAgr[i] = true;
+                                            _amountItems[i].text = "0";
+                                          });
+                                        }
+                                        setState(() {
+                                          _importeTotal = 0;
+                                          _importeProductos = 0;
+                                          _importeComision = 0;
+                                        });
+                                      } else if (res.statusCode == 404) {
+                                        _showPleaseWait(false);
+                                        // Como retorno que le token no es valido retorno a la página de Login
+                                        Navigator.pop(context);
+                                      } else {
+                                        _showPleaseWait(false);
+                                        _showSnackBar(json.decode(res.body)['message'], error: false);
+                                      }
+                                    }
+                                  } else {
+                                    _showSnackBar('El importe comprado no puede ser mayor la cantidad disponible', error: false);
+                                  }
+                                }catch (e) {
+                                  _showPleaseWait(false);
+                                  _showSnackBar(e.toString(), error: false);
+                                  print('Error' + e.toString());
+                                }
+                              },
                               disabledColor: secondaryLightColor,
                               disabledTextColor: secondaryTextColor,
                               splashColor: Colors.blueAccent,
@@ -972,7 +1140,7 @@ class _SliderAmountPermitedDetrayState extends State {
                             onPressed: () async {
                               try {
                                 if (int.parse(_amountToDetray.text) > 0) {
-                                  if (int.parse(_amountToDetray.text) <= customListItemKey.currentState.puedesRetirar) {
+                                  if ((int.parse(_amountToDetray.text)+cuota) <= (customListItemKey.currentState.puedesRetirar)) {
                                     await _displayDialog (context, _amountToDetray.text, banco, cuenta, cuota);
                                     print ('El valor de _confirmaretiro es: ' + _confirmaRetiro.toString());
                                     if (_confirmaRetiro) {
@@ -994,7 +1162,7 @@ class _SliderAmountPermitedDetrayState extends State {
                                             'bank_account_id': payload['bank_account_id'],
                                             'salario_acumulado': payload['salario_acumulado'],
                                             //'salario_acumulado': customListItemKey.currentState.puedesRetirar,
-                                            'max_permitido': payload['max_permitido'],
+                                            'max_permitido': customListItemKey.currentState.puedesRetirar,
                                             'extracted_amount': _amountToDetray.text,
                                             'comision': payload['comision'],
                                             'acct_no': payload['acct_no']
@@ -1009,7 +1177,7 @@ class _SliderAmountPermitedDetrayState extends State {
                                         print('El valor de pleaseWait es: ' + _pleaseWait.toString());
                                         print('El retiro ha sido hecho con retorno 200');
                                         customListItemKey.currentState.setState(() {
-                                          customListItemKey.currentState.puedesRetirar = customListItemKey.currentState.puedesRetirar - int.parse(_amountToDetray.text);
+                                          customListItemKey.currentState.puedesRetirar = customListItemKey.currentState.puedesRetirar - (int.parse(_amountToDetray.text)+cuota);
                                         });
                                         setState(() {
                                           _puedesRetirar = customListItemKey.currentState.puedesRetirar;
