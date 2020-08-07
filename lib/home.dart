@@ -319,6 +319,8 @@ class _ProductsAvail_State extends State {
   int _importeTotal;
   bool _pleaseWait = false;
   bool _confirmaRetiro = false;
+  final PleaseWaitBlueBackGroundDownWidget _pleaseWaitWidget =
+  PleaseWaitBlueBackGroundDownWidget(key: ObjectKey("PleaseWaitBlueBackGroundDownWidget"));
 
   @override
   void initState() {
@@ -591,8 +593,8 @@ class _ProductsAvail_State extends State {
     );
   }
   Widget build(BuildContext context) {
-    return Padding (
-      padding: const EdgeInsets.symmetric(vertical: 5.0),
+    Widget builder = new Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -663,12 +665,12 @@ class _ProductsAvail_State extends State {
                       Column(
                         children: <Widget>[
                           Text(
-                            new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(_importeComision),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 22.0,
-                              color: Colors.black,
-                            )
+                              new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(_importeComision),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 22.0,
+                                color: Colors.black,
+                              )
                           ),
                           Text(
                               'Comisión',
@@ -712,117 +714,117 @@ class _ProductsAvail_State extends State {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
                       Expanded(
-                          child: Container(
-                            margin: EdgeInsets.fromLTRB(13, 5, 13, 5),
-                            child: FlatButton(
-                              color: primaryDarkColor,
-                              textColor: Colors.white,
-                              padding: EdgeInsets.all(8.0),
-                              onPressed: () async{
-                                try{
-                                  if (_importeTotal <= customListItemKey.currentState.puedesRetirar) {
-                                    await _displayDialog (context, _importeTotal.toString(), banco, cuenta, _importeComision);
-                                    print ('El valor de _confirmaretiro es: ' + _confirmaRetiro.toString());
-                                    if (_confirmaRetiro) {
-                                      print('He confirmado el retiro');
-                                      print('Justo antes de llamar a _showPleaseWait');
+                        child: Container(
+                          margin: EdgeInsets.fromLTRB(13, 5, 13, 5),
+                          child: FlatButton(
+                            color: primaryDarkColor,
+                            textColor: Colors.white,
+                            padding: EdgeInsets.all(8.0),
+                            onPressed: () async{
+                              try{
+                                if (_importeTotal <= customListItemKey.currentState.puedesRetirar) {
+                                  await _displayDialog (context, _importeTotal.toString(), banco, cuenta, _importeComision);
+                                  print ('El valor de _confirmaretiro es: ' + _confirmaRetiro.toString());
+                                  if (_confirmaRetiro) {
+                                    print('He confirmado el retiro');
+                                    print('Justo antes de llamar a _showPleaseWait');
+                                    print('El valor de pleaseWait es: ' + _pleaseWait.toString());
+                                    _showPleaseWait(true);
+                                    print('Justo después de llamar a _showPleaseWait');
+                                    print('El valor de pleaseWait es: ' + _pleaseWait.toString());
+                                    final http.Response res = await http.post("$SERVER_IP/savePurchasedProducts",
+                                        headers: <String, String>{
+                                          'Content-Type': 'application/json; charset=UTF-8',
+                                          'Authorization': jwt
+                                        },
+                                        body: jsonEncode(<String, dynamic>{
+                                          'persone_id': payload['empleado_id'],
+                                          'company_id': payload['company_id'],
+                                          'period_id': payload['period_id'],
+                                          'bank_account_id': payload['bank_account_id'],
+                                          'payroll_day': payload['period_id'],
+                                          'salario_acumulado': payload['salario_acumulado'],
+                                          'max_permitido': customListItemKey.currentState.puedesRetirar,
+                                          'extracted_amount': _importeTotal,
+                                          'comission_amount': _importeComision,
+                                          'acct_no': payload['acct_no'],
+                                          'purchased_products': bloc.allItems['cartItems']
+                                        })
+                                    );
+                                    if (res.statusCode == 200) {
+                                      // He de variar la cantidad que puedes retirar de la pantalla
+                                      print('Justo antes de llamar por segunda vez _showPleaseWait');
                                       print('El valor de pleaseWait es: ' + _pleaseWait.toString());
-                                      _showPleaseWait(true);
+                                      _showPleaseWait(false);
                                       print('Justo después de llamar a _showPleaseWait');
                                       print('El valor de pleaseWait es: ' + _pleaseWait.toString());
-                                      final http.Response res = await http.post("$SERVER_IP/savePurchasedProducts",
-                                          headers: <String, String>{
-                                            'Content-Type': 'application/json; charset=UTF-8',
-                                            'Authorization': jwt
-                                          },
-                                          body: jsonEncode(<String, dynamic>{
-                                            'persone_id': payload['empleado_id'],
-                                            'company_id': payload['company_id'],
-                                            'period_id': payload['period_id'],
-                                            'bank_account_id': payload['bank_account_id'],
-                                            'payroll_day': payload['period_id'],
-                                            'salario_acumulado': payload['salario_acumulado'],
-                                            'max_permitido': customListItemKey.currentState.puedesRetirar,
-                                            'extracted_amount': _importeTotal,
-                                            'comission_amount': _importeComision,
-                                            'acct_no': payload['acct_no'],
-                                            'purchased_products': bloc.allItems['cartItems']
-                                          })
-                                      );
-                                      if (res.statusCode == 200) {
-                                        // He de variar la cantidad que puedes retirar de la pantalla
-                                        print('Justo antes de llamar por segunda vez _showPleaseWait');
-                                        print('El valor de pleaseWait es: ' + _pleaseWait.toString());
-                                        _showPleaseWait(false);
-                                        print('Justo después de llamar a _showPleaseWait');
-                                        print('El valor de pleaseWait es: ' + _pleaseWait.toString());
-                                        customListItemKey.currentState.setState(() {
-                                          customListItemKey.currentState.puedesRetirar = customListItemKey.currentState.puedesRetirar - _importeTotal;
-                                        });
-                                        print('Después de el http.post');
-                                        print(res.body);
-                                        final data = json.decode(res.body)['data'];
-                                        final parsed = json.decode(res.body)['data'].cast<Map<String, dynamic>>();
-                                        final purchasedProducts = parsed.map<PurchasedProduct>((json) => PurchasedProduct.fomJson(json)).toList();
-                                        final infoPurchased = Map<String, dynamic>();
-                                        infoPurchased['total_amount'] = _importeTotal;
-                                        infoPurchased['products_amount'] = _importeProductos;
-                                        infoPurchased['comission_amount'] = _importeComision;
-                                        print('El valor de importeTotal es: ' + _importeTotal.toString());
-                                        print('El valor de products_amount es: ' + _importeProductos.toString());
-                                        print('El valor de comission_amount es: ' + _importeComision.toString());
-                                        print('Justo antes de llamar al push');
-                                        for (var i = 0; i< purchasedProducts.length; i++){
-                                            print(purchasedProducts[i].order_id);
-                                        };
-                                        Navigator.push (
+                                      customListItemKey.currentState.setState(() {
+                                        customListItemKey.currentState.puedesRetirar = customListItemKey.currentState.puedesRetirar - _importeTotal;
+                                      });
+                                      print('Después de el http.post');
+                                      print(res.body);
+                                      final data = json.decode(res.body)['data'];
+                                      final parsed = json.decode(res.body)['data'].cast<Map<String, dynamic>>();
+                                      final purchasedProducts = parsed.map<PurchasedProduct>((json) => PurchasedProduct.fomJson(json)).toList();
+                                      final infoPurchased = Map<String, dynamic>();
+                                      infoPurchased['total_amount'] = _importeTotal;
+                                      infoPurchased['products_amount'] = _importeProductos;
+                                      infoPurchased['comission_amount'] = _importeComision;
+                                      print('El valor de importeTotal es: ' + _importeTotal.toString());
+                                      print('El valor de products_amount es: ' + _importeProductos.toString());
+                                      print('El valor de comission_amount es: ' + _importeComision.toString());
+                                      print('Justo antes de llamar al push');
+                                      for (var i = 0; i< purchasedProducts.length; i++){
+                                        print(purchasedProducts[i].order_id);
+                                      };
+                                      Navigator.push (
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) => DetalleCompra(jwt, payload, purchasedProducts, infoPurchased),
                                             fullscreenDialog: false,
                                           )
-                                        );
-                                        print('Después de regresar de la pantalla de información');
-                                        // Regreso de la pantalla de información
-                                        print ('La longitud de _allowItems es: ' + _amountItems.length.toString());
-                                        for (var i = 0; i < _amountItems.length; i++){
-                                            setState(() {
-                                              _visibleButttonAgr[i] = true;
-                                              _amountItems[i].text = "0";
-                                            });
-                                        }
+                                      );
+                                      print('Después de regresar de la pantalla de información');
+                                      // Regreso de la pantalla de información
+                                      print ('La longitud de _allowItems es: ' + _amountItems.length.toString());
+                                      for (var i = 0; i < _amountItems.length; i++){
                                         setState(() {
-                                          _importeTotal = 0;
-                                          _importeProductos = 0;
-                                          _importeComision = 0;
+                                          _visibleButttonAgr[i] = true;
+                                          _amountItems[i].text = "0";
                                         });
-                                      } else if (res.statusCode == 404) {
-                                        _showPleaseWait(false);
-                                        // Como retorno que le token no es valido retorno a la página de Login
-                                        Navigator.pop(context);
-                                      } else {
-                                        _showPleaseWait(false);
-                                        _showSnackBar(json.decode(res.body)['message'], error: false);
                                       }
+                                      setState(() {
+                                        _importeTotal = 0;
+                                        _importeProductos = 0;
+                                        _importeComision = 0;
+                                      });
+                                    } else if (res.statusCode == 404) {
+                                      _showPleaseWait(false);
+                                      // Como retorno que le token no es valido retorno a la página de Login
+                                      Navigator.pop(context);
+                                    } else {
+                                      _showPleaseWait(false);
+                                      _showSnackBar(json.decode(res.body)['message'], error: false);
                                     }
-                                  } else {
-                                    _showSnackBar('El importe comprado no puede ser mayor la cantidad disponible', error: false);
                                   }
-                                }catch (e) {
-                                  _showPleaseWait(false);
-                                  _showSnackBar(e.toString(), error: false);
-                                  print('Error' + e.toString());
+                                } else {
+                                  _showSnackBar('El importe comprado no puede ser mayor la cantidad disponible', error: false);
                                 }
-                              },
-                              disabledColor: secondaryLightColor,
-                              disabledTextColor: secondaryTextColor,
-                              splashColor: Colors.blueAccent,
-                              child: Text (
-                                'COMPRAR',
-                                style: TextStyle (fontSize: 20.0),
-                              ),
+                              }catch (e) {
+                                _showPleaseWait(false);
+                                _showSnackBar(e.toString(), error: false);
+                                print('Error' + e.toString());
+                              }
+                            },
+                            disabledColor: secondaryLightColor,
+                            disabledTextColor: secondaryTextColor,
+                            splashColor: Colors.blueAccent,
+                            child: Text (
+                              'COMPRAR',
+                              style: TextStyle (fontSize: 20.0),
                             ),
                           ),
+                        ),
                       )
                     ],
                   )
@@ -832,6 +834,13 @@ class _ProductsAvail_State extends State {
           ),
         ],
       ),
+    );
+    Widget bodyWidget = _pleaseWait
+        ? Stack(key: ObjectKey("stack"), children: [_pleaseWaitWidget, builder])
+        : Stack(key: ObjectKey("stack"), children: [builder]);
+    return new Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5.0),
+      child: bodyWidget,
     );
   }
 }
@@ -884,7 +893,7 @@ class _SliderAmountPermitedDetrayState extends State {
   bool _confirmaRetiro = false;
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     _amountToDetray.text = "0";
     _confirmaRetiro = false;
