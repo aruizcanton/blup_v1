@@ -740,8 +740,12 @@ class _ProductsAvail_State extends State {
                                             'company_id': payload['company_id'],
                                             'period_id': payload['period_id'],
                                             'bank_account_id': payload['bank_account_id'],
+                                            'payroll_day': payload['period_id'],
                                             'salario_acumulado': payload['salario_acumulado'],
                                             'max_permitido': customListItemKey.currentState.puedesRetirar,
+                                            'extracted_amount': _importeTotal,
+                                            'comission_amount': _importeComision,
+                                            'acct_no': payload['acct_no'],
                                             'purchased_products': bloc.allItems['cartItems']
                                           })
                                       );
@@ -771,7 +775,7 @@ class _ProductsAvail_State extends State {
                                         for (var i = 0; i< purchasedProducts.length; i++){
                                             print(purchasedProducts[i].order_id);
                                         };
-                                        Navigator.push(
+                                        Navigator.push (
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) => DetalleCompra(jwt, payload, purchasedProducts, infoPurchased),
@@ -780,11 +784,12 @@ class _ProductsAvail_State extends State {
                                         );
                                         print('Después de regresar de la pantalla de información');
                                         // Regreso de la pantalla de información
-                                        for (var i = 0; i < bloc.allItems['shopItems'].length; i++){
-                                          setState(() {
-                                            _visibleButttonAgr[i] = true;
-                                            _amountItems[i].text = "0";
-                                          });
+                                        print ('La longitud de _allowItems es: ' + _amountItems.length.toString());
+                                        for (var i = 0; i < _amountItems.length; i++){
+                                            setState(() {
+                                              _visibleButttonAgr[i] = true;
+                                              _amountItems[i].text = "0";
+                                            });
                                         }
                                         setState(() {
                                           _importeTotal = 0;
@@ -863,7 +868,6 @@ class _SliderAmountPermitedDetrayState extends State {
   final PleaseWaitBlueBackGroundWidget _pleaseWaitWidget =
   PleaseWaitBlueBackGroundWidget(key: ObjectKey("pleaseWaitBlueBackGroundWidget"));
   bool _pleaseWait = false;
-  int _puedesRetirar;
   int _rating = 0;
   TextEditingController _amountToDetray = TextEditingController();
   NumberFormat _f = new NumberFormat('#,###', 'en_US');
@@ -872,6 +876,7 @@ class _SliderAmountPermitedDetrayState extends State {
   FocusNode _nodeTextAmountToRetrieve = FocusNode();
   bool _tecladoNumerico = true;
   bool _expandFlag = false;
+  int _puedesRetirar;
 
 
   double _lowerValue = 0;
@@ -883,9 +888,9 @@ class _SliderAmountPermitedDetrayState extends State {
     super.initState();
     _amountToDetray.text = "0";
     _confirmaRetiro = false;
-    _puedesRetirar = puedesRetirar;
     _tecladoNumerico = true;
     _expandFlag = false;
+    _puedesRetirar = this.puedesRetirar;
   }
 
   @override
@@ -1001,13 +1006,13 @@ class _SliderAmountPermitedDetrayState extends State {
                       var importe = int.parse(text);
                       //print('La cantidad cruda es:' + _rating.toString());
                       //print('El maximo que puedes retirar es: ' + _puedesRetirar.toString());
-                      if (_puedesRetirar == 0) {
+                      if (puedesRetirar == 0) {
                         _showSnackBar('No puede realizar ningún retiro mas. Ha agotado su saldo.' , error: false);
-                      } else if ((_puedesRetirar == 0) && (customListItemKey.currentState.saldoAcumulado == 0)) {
+                      } else if ((puedesRetirar == 0) && (customListItemKey.currentState.saldoAcumulado == 0)) {
                         _showSnackBar('No puede realizar ningún retiro. Estamos en la fecha de ajuste.', error: false);
                       }
-                      else if (importe > _puedesRetirar) {
-                        _showSnackBar('El monto a retirar no puede ser mayor a ' + _f.format(_puedesRetirar) + ' pesos.', error: false);
+                      else if (importe > puedesRetirar) {
+                        _showSnackBar('El monto a retirar no puede ser mayor a ' + _f.format(puedesRetirar) + ' pesos.', error: false);
                       } else {
                         setState(() {
                           _expandFlag = !_expandFlag;
@@ -1180,9 +1185,10 @@ class _SliderAmountPermitedDetrayState extends State {
                                           customListItemKey.currentState.puedesRetirar = customListItemKey.currentState.puedesRetirar - (int.parse(_amountToDetray.text)+cuota);
                                         });
                                         setState(() {
-                                          _puedesRetirar = customListItemKey.currentState.puedesRetirar;
+                                          _puedesRetirar = _puedesRetirar - (int.parse(_amountToDetray.text)+cuota);
                                           payload['max_permitido'] = _puedesRetirar;
                                           _expandFlag = false;
+
                                         });
                                         _amountToDetray.text = "0";
                                         print('Después de el http.post');
