@@ -16,12 +16,14 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart' show NumberFormat hide TextDirection;
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:blupv1/colors.dart';
 import 'package:blupv1/utils/util.dart';
 import 'package:blupv1/detalleRetiro.dart';
 import 'package:blupv1/bloc/cartProductsBloc.dart';
 import 'package:blupv1/model/purchasedProduct.dart';
+import 'package:blupv1/perfil.dart';
 //import 'package:flutter_xlider/flutter_xlider.dart';
 //import 'package:keyboard_actions/keyboard_actions.dart';
 
@@ -54,6 +56,8 @@ class _HomePageState extends State<HomePage> {
   final PleaseWaitWidget _pleaseWaitWidget =
   PleaseWaitWidget(key: ObjectKey("pleaseWaitWidget"));
   final GlobalKey<_CustomListItemState> _customListItemKey = GlobalKey<_CustomListItemState>();
+  final GlobalKey<_CustomAmountPermitedDetrayState> _customAmountPermitedDetray = GlobalKey<_CustomAmountPermitedDetrayState>();
+  final GlobalKey<_ProductsAvailState> _productAvailWidget = GlobalKey<_ProductsAvailState>();
   bool _pleaseWait = false;
 
   _showSnackBar(String content, {bool error = false}) {
@@ -126,11 +130,6 @@ class _HomePageState extends State<HomePage> {
       print('Ha habido un error dentro de _getDataOperation');
       print(e);
     }
-  }
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
   }
   @override
   Widget build(BuildContext context) {
@@ -209,13 +208,33 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                 _CustomAmountPermitedDetray(payload['max_permitido'], _scaffoldKey, _customListItemKey, payload['bank'], payload['acct_no'], payload['comision'], jwt, payload),
+                 _CustomAmountPermitedDetray(
+                   key: _customAmountPermitedDetray,
+                   puedesRetirar: payload['max_permitido'],
+                   scafoldKey: _scaffoldKey,
+                   customListItemKey: _customListItemKey,
+                   productAvailWidget: _productAvailWidget,
+                   banco: payload['bank'],
+                   cuenta: payload['acct_no'],
+                   cuota: payload['comision'],
+                   jwt: jwt,
+                   payload: payload,
+                 ),
               ],
             ),
           ),
           Card(
             clipBehavior: Clip.antiAlias,
-            child: _ProductsAvailWidget(payload, _scaffoldKey, _customListItemKey, payload['bank'], payload['acct_no'], jwt),
+            child: _ProductsAvailWidget(
+              key: _productAvailWidget,
+              payload: payload,
+              scafoldKey: _scaffoldKey,
+              customListItemKey: _customListItemKey,
+              customAmountPermitedDetray: _customAmountPermitedDetray,
+              banco: payload['bank'],
+              cuenta: payload['acct_no'],
+              jwt: jwt,
+            ),
           ),
         ],
       ),
@@ -240,6 +259,14 @@ class _HomePageState extends State<HomePage> {
             ListTile(
               leading: Icon(Icons.person_outline),
               title: Text('Perfil'),
+              onTap: () {
+                Navigator.push (
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Perfil(payload),
+                    )
+                );
+              }
             ),
             ListTile(
               leading: Icon(Icons.vpn_key),
@@ -278,10 +305,19 @@ class _HomePageState extends State<HomePage> {
             title: Text('Saldo'),
           ),
         ],
-        currentIndex: _selectedIndex,
+        currentIndex: 1,
 //        selectedItemColor: Colors.amber[800],
         selectedItemColor: kBlupErrorRed,
-        onTap: _onItemTapped,
+        onTap: (index) {
+          if (index == 0) {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Perfil(payload),
+                )
+            );
+          }
+        },
       ),
     );
 
@@ -293,23 +329,34 @@ class _ProductsAvailWidget extends StatefulWidget {
   final String banco;
   final String cuenta;
   final String jwt;
-  GlobalKey<_CustomListItemState> customListItemKey;
-  _ProductsAvailWidget(this.payload, this.scafoldKey, this.customListItemKey, this.banco, this.cuenta, this.jwt);
+  final GlobalKey<_CustomListItemState> customListItemKey;
+  final GlobalKey<_CustomAmountPermitedDetrayState> customAmountPermitedDetray;
+  _ProductsAvailWidget({
+    Key key,
+    this.payload,
+    this.scafoldKey,
+    this.customListItemKey,
+    this.customAmountPermitedDetray,
+    this.banco,
+    this.cuenta,
+    this.jwt
+  }): super (key : key);
 
   @override
-  _ProductsAvail_State createState() {
-    return _ProductsAvail_State(payload, scafoldKey, customListItemKey, banco, cuenta, jwt);
+  _ProductsAvailState createState() {
+    return _ProductsAvailState(payload, scafoldKey, customListItemKey, customAmountPermitedDetray, banco, cuenta, jwt);
   }
 }
-class _ProductsAvail_State extends State {
+class _ProductsAvailState extends State {
   final Map<String, dynamic> payload;
   final GlobalKey<ScaffoldState> scafoldKey;
   final String banco;
   final String cuenta;
   final String jwt;
-  GlobalKey<_CustomListItemState> customListItemKey;
+  final GlobalKey<_CustomListItemState> customListItemKey;
+  final GlobalKey<_CustomAmountPermitedDetrayState> customAmountPermitedDetray;
   @override
-  _ProductsAvail_State (this.payload, this.scafoldKey, this.customListItemKey, this.banco, this.cuenta, this.jwt);
+  _ProductsAvailState (this.payload, this.scafoldKey, this.customListItemKey, this.customAmountPermitedDetray, this.banco, this.cuenta, this.jwt);
 
   //bool _visibleButttonAgr = true;
   var _visibleButttonAgr = List<bool>();
@@ -319,6 +366,7 @@ class _ProductsAvail_State extends State {
   int _importeTotal;
   bool _pleaseWait = false;
   bool _confirmaRetiro = false;
+  bool expanded = false;
   final PleaseWaitBlueBackGroundDownWidget _pleaseWaitWidget =
   PleaseWaitBlueBackGroundDownWidget(key: ObjectKey("PleaseWaitBlueBackGroundDownWidget"));
 
@@ -334,6 +382,7 @@ class _ProductsAvail_State extends State {
     _importeTotal = 0;
     _confirmaRetiro = false;
     _pleaseWait = false;
+    expanded = false;
   }
 
   @override
@@ -422,7 +471,11 @@ class _ProductsAvail_State extends State {
                         height: 60,
                         child: AspectRatio(
                           aspectRatio: 3.0 / 2.0,
-                          child: Image.asset('assets/' + shopList[index]['image']),
+                          //child: Image.asset('assets/' + shopList[index]['image']),
+                          child: CachedNetworkImage(
+                            placeholder: (context, url) => CircularProgressIndicator(),
+                            imageUrl: SERVER_IP + '/image/products/' + shopList[index]['image'],
+                          )
                         ),
                       ),
                     ),
@@ -485,6 +538,10 @@ class _ProductsAvail_State extends State {
                                         setState(() {
                                           _visibleButttonAgr[index] = false;
                                           _amountItems[index].text = "0";
+                                          expanded = true;
+                                          customAmountPermitedDetray.currentState.setState(() {
+                                            customAmountPermitedDetray.currentState.expandFlag = false;
+                                          });
                                         });
                                       },
                                       disabledColor: secondaryLightColor,
@@ -506,23 +563,36 @@ class _ProductsAvail_State extends State {
                                           color: primaryDarkColor,
                                           textColor: Colors.white,
                                           onPressed: (){
-                                            print('Antes de pasar el setState');
                                             if (int.parse(_amountItems[index].text) > 0) {
                                               setState(() {
                                                 _importeProductos = _importeProductos - shopList[index]['product_price'];
                                                 _importeComision = _importeComision - shopList[index]['comission'];
                                                 _importeTotal = _importeProductos - _importeComision;
                                                 shopList[index]['avail'] = shopList[index]['avail'] +1;
-                                                if (int.parse(_amountItems[index].text) == 1) _visibleButttonAgr[index] = true;
+                                                if (int.parse(_amountItems[index].text) == 1) {
+                                                  _visibleButttonAgr[index] = true;
+                                                  var testigo = false;
+                                                  for (var i = 0; i< _visibleButttonAgr.length; i++){
+                                                    if (_visibleButttonAgr[i] == false) testigo = true;
+                                                  }
+                                                  if (testigo == false) expanded = false;
+                                                }
                                               });
-                                              print('Después de pasar el setState');
                                               _amountItems[index].text = (int.parse(_amountItems[index].text) - 1).toString();
                                               bloc.removeFromCart(shopList[index]);
                                             } else {
                                               setState(() {
                                                 _visibleButttonAgr[index] = true;
+                                                var testigo = false;
+                                                for (var i = 0; i< _visibleButttonAgr.length; i++){
+                                                  if (_visibleButttonAgr[i] == false) testigo = true;
+                                                }
+                                                if (testigo == false) expanded = false;
                                               });
                                             }
+                                            customAmountPermitedDetray.currentState.setState(() {
+                                              customAmountPermitedDetray.currentState.expandFlag = false;
+                                            });
                                           },
                                           disabledColor: secondaryLightColor,
                                           child: Text(
@@ -551,6 +621,9 @@ class _ProductsAvail_State extends State {
 
                                               bloc.addToCart(shopList[index]);
                                             }
+                                            customAmountPermitedDetray.currentState.setState(() {
+                                              customAmountPermitedDetray.currentState.expandFlag = false;
+                                            });
                                           },
                                           disabledColor: secondaryLightColor,
                                           child: Text(
@@ -632,201 +705,213 @@ class _ProductsAvail_State extends State {
                       )
                     ],
                   ),
-                  const Divider(
-                    color: Colors.black,
-                    height: 20,
-                    thickness: 5,
-                    indent: 20,
-                    endIndent: 20,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: <Widget>[
-                      Column(
+                  ExpandableContainer(
+                      expanded: expanded,
+                      expandedHeight: 140,
+                      child: new Column(
                         children: <Widget>[
-                          Text(
-                            new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(_importeProductos),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 22.0,
-                              color: Colors.black,
-                            ),
+                          const Divider(
+                            color: Colors.black,
+                            height: 20,
+                            thickness: 5,
+                            indent: 20,
+                            endIndent: 20,
                           ),
-                          Text(
-                              'Productos',
-                              style: const TextStyle(
-                                fontSize: 10.0,
-                                color: Colors.black,
-                              )
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: <Widget>[
+                              Column(
+                                children: <Widget>[
+                                  Text(
+                                    new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(_importeProductos),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 22.0,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  Text(
+                                      'Productos',
+                                      style: const TextStyle(
+                                        fontSize: 10.0,
+                                        color: Colors.black,
+                                      )
+                                  ),
+                                ],
+                              ),
+                              _VerticalDivider(),
+                              Column(
+                                children: <Widget>[
+                                  Text(
+                                      new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(_importeComision),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 22.0,
+                                        color: Colors.black,
+                                      )
+                                  ),
+                                  Text(
+                                      'Comisión',
+                                      style: const TextStyle(
+                                        fontSize: 10.0,
+                                        color: Colors.black,
+                                      )
+                                  ),
+                                ],
+                              ),
+                              _VerticalDivider(),
+                              Column(
+                                children: <Widget>[
+                                  Text(
+                                      new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(_importeTotal),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 22.0,
+                                        color: Colors.black,
+                                      )
+                                  ),
+                                  Text(
+                                      'Total',
+                                      style: const TextStyle(
+                                        fontSize: 10.0,
+                                        color: Colors.black,
+                                      )
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      VerticalDivider(),
-                      Column(
-                        children: <Widget>[
-                          Text(
-                              new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(_importeComision),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 22.0,
-                                color: Colors.black,
-                              )
+                          const Divider(
+                            color: Colors.black,
+                            height: 20,
+                            thickness: 5,
+                            indent: 20,
+                            endIndent: 20,
                           ),
-                          Text(
-                              'Comisión',
-                              style: const TextStyle(
-                                fontSize: 10.0,
-                                color: Colors.black,
-                              )
-                          ),
-                        ],
-                      ),
-                      VerticalDivider(),
-                      Column(
-                        children: <Widget>[
-                          Text(
-                              new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(_importeTotal),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 22.0,
-                                color: Colors.black,
-                              )
-                          ),
-                          Text(
-                              'Total',
-                              style: const TextStyle(
-                                fontSize: 10.0,
-                                color: Colors.black,
-                              )
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const Divider(
-                    color: Colors.black,
-                    height: 20,
-                    thickness: 5,
-                    indent: 20,
-                    endIndent: 20,
-                  ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      Expanded(
-                        child: Container(
-                          margin: EdgeInsets.fromLTRB(13, 5, 13, 5),
-                          child: FlatButton(
-                            color: primaryDarkColor,
-                            textColor: Colors.white,
-                            padding: EdgeInsets.all(8.0),
-                            onPressed: () async{
-                              try{
-                                if (_importeTotal <= customListItemKey.currentState.puedesRetirar) {
-                                  await _displayDialog (context, _importeTotal.toString(), banco, cuenta, _importeComision);
-                                  print ('El valor de _confirmaretiro es: ' + _confirmaRetiro.toString());
-                                  if (_confirmaRetiro) {
-                                    print('He confirmado el retiro');
-                                    print('Justo antes de llamar a _showPleaseWait');
-                                    print('El valor de pleaseWait es: ' + _pleaseWait.toString());
-                                    _showPleaseWait(true);
-                                    print('Justo después de llamar a _showPleaseWait');
-                                    print('El valor de pleaseWait es: ' + _pleaseWait.toString());
-                                    final http.Response res = await http.post("$SERVER_IP/savePurchasedProducts",
-                                        headers: <String, String>{
-                                          'Content-Type': 'application/json; charset=UTF-8',
-                                          'Authorization': jwt
-                                        },
-                                        body: jsonEncode(<String, dynamic>{
-                                          'persone_id': payload['empleado_id'],
-                                          'company_id': payload['company_id'],
-                                          'period_id': payload['period_id'],
-                                          'bank_account_id': payload['bank_account_id'],
-                                          'payroll_day': payload['period_id'],
-                                          'salario_acumulado': payload['salario_acumulado'],
-                                          'max_permitido': customListItemKey.currentState.puedesRetirar,
-                                          'extracted_amount': _importeTotal,
-                                          'comission_amount': _importeComision,
-                                          'acct_no': payload['acct_no'],
-                                          'purchased_products': bloc.allItems['cartItems']
-                                        })
-                                    );
-                                    if (res.statusCode == 200) {
-                                      // He de variar la cantidad que puedes retirar de la pantalla
-                                      print('Justo antes de llamar por segunda vez _showPleaseWait');
-                                      print('El valor de pleaseWait es: ' + _pleaseWait.toString());
-                                      _showPleaseWait(false);
-                                      print('Justo después de llamar a _showPleaseWait');
-                                      print('El valor de pleaseWait es: ' + _pleaseWait.toString());
-                                      customListItemKey.currentState.setState(() {
-                                        customListItemKey.currentState.puedesRetirar = customListItemKey.currentState.puedesRetirar - _importeTotal;
-                                      });
-                                      print('Después de el http.post');
-                                      print(res.body);
-                                      final data = json.decode(res.body)['data'];
-                                      final parsed = json.decode(res.body)['data'].cast<Map<String, dynamic>>();
-                                      final purchasedProducts = parsed.map<PurchasedProduct>((json) => PurchasedProduct.fomJson(json)).toList();
-                                      final infoPurchased = Map<String, dynamic>();
-                                      infoPurchased['total_amount'] = _importeTotal;
-                                      infoPurchased['products_amount'] = _importeProductos;
-                                      infoPurchased['comission_amount'] = _importeComision;
-                                      print('El valor de importeTotal es: ' + _importeTotal.toString());
-                                      print('El valor de products_amount es: ' + _importeProductos.toString());
-                                      print('El valor de comission_amount es: ' + _importeComision.toString());
-                                      print('Justo antes de llamar al push');
-                                      for (var i = 0; i< purchasedProducts.length; i++){
-                                        print(purchasedProducts[i].order_id);
-                                      };
-                                      Navigator.push (
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => DetalleCompra(jwt, payload, purchasedProducts, infoPurchased),
-                                            fullscreenDialog: false,
-                                          )
-                                      );
-                                      print('Después de regresar de la pantalla de información');
-                                      // Regreso de la pantalla de información
-                                      print ('La longitud de _allowItems es: ' + _amountItems.length.toString());
-                                      for (var i = 0; i < _amountItems.length; i++){
-                                        setState(() {
-                                          _visibleButttonAgr[i] = true;
-                                          _amountItems[i].text = "0";
-                                        });
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: <Widget>[
+                              Expanded(
+                                child: Container(
+                                  margin: EdgeInsets.fromLTRB(13, 5, 13, 5),
+                                  child: FlatButton(
+                                    color: primaryDarkColor,
+                                    textColor: Colors.white,
+                                    padding: EdgeInsets.all(8.0),
+                                    onPressed: () async{
+                                      try{
+                                        if (_importeTotal <= customListItemKey.currentState.puedesRetirar) {
+                                          await _displayDialog (context, _importeTotal.toString(), banco, cuenta, _importeComision);
+                                          print ('El valor de _confirmaretiro es: ' + _confirmaRetiro.toString());
+                                          if (_confirmaRetiro) {
+                                            print('He confirmado el retiro');
+                                            print('Justo antes de llamar a _showPleaseWait');
+                                            print('El valor de pleaseWait es: ' + _pleaseWait.toString());
+                                            _showPleaseWait(true);
+                                            print('Justo después de llamar a _showPleaseWait');
+                                            print('El valor de pleaseWait es: ' + _pleaseWait.toString());
+                                            final http.Response res = await http.post("$SERVER_IP/savePurchasedProducts",
+                                                headers: <String, String>{
+                                                  'Content-Type': 'application/json; charset=UTF-8',
+                                                  'Authorization': jwt
+                                                },
+                                                body: jsonEncode(<String, dynamic>{
+                                                  'persone_id': payload['empleado_id'],
+                                                  'company_id': payload['company_id'],
+                                                  'period_id': payload['period_id'],
+                                                  'bank_account_id': payload['bank_account_id'],
+                                                  'payroll_day': payload['period_id'],
+                                                  'salario_acumulado': payload['salario_acumulado'],
+                                                  'max_permitido': customListItemKey.currentState.puedesRetirar,
+                                                  'extracted_amount': _importeTotal,
+                                                  'comission_amount': _importeComision,
+                                                  'acct_no': payload['acct_no'],
+                                                  'purchased_products': bloc.allItems['cartItems']
+                                                })
+                                            );
+                                            if (res.statusCode == 200) {
+                                              // He de variar la cantidad que puedes retirar de la pantalla
+                                              print('Justo antes de llamar por segunda vez _showPleaseWait');
+                                              print('El valor de pleaseWait es: ' + _pleaseWait.toString());
+                                              _showPleaseWait(false);
+                                              print('Justo después de llamar a _showPleaseWait');
+                                              print('El valor de pleaseWait es: ' + _pleaseWait.toString());
+                                              customListItemKey.currentState.setState(() {
+                                                customListItemKey.currentState.puedesRetirar = customListItemKey.currentState.puedesRetirar - _importeTotal;
+                                              });
+                                              customAmountPermitedDetray.currentState.setState(() {
+                                                customAmountPermitedDetray.currentState.amoutToDetray = customListItemKey.currentState.puedesRetirar - _importeTotal;
+                                              });
+                                              print('Después de el http.post');
+                                              print(res.body);
+                                              final data = json.decode(res.body)['data'];
+                                              final parsed = json.decode(res.body)['data'].cast<Map<String, dynamic>>();
+                                              final purchasedProducts = parsed.map<PurchasedProduct>((json) => PurchasedProduct.fomJson(json)).toList();
+                                              final infoPurchased = Map<String, dynamic>();
+                                              infoPurchased['total_amount'] = _importeTotal;
+                                              infoPurchased['products_amount'] = _importeProductos;
+                                              infoPurchased['comission_amount'] = _importeComision;
+                                              print('El valor de importeTotal es: ' + _importeTotal.toString());
+                                              print('El valor de products_amount es: ' + _importeProductos.toString());
+                                              print('El valor de comission_amount es: ' + _importeComision.toString());
+                                              print('Justo antes de llamar al push');
+                                              for (var i = 0; i< purchasedProducts.length; i++){
+                                                print(purchasedProducts[i].order_id);
+                                              };
+                                              Navigator.push (
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) => DetalleCompra(jwt, payload, purchasedProducts, infoPurchased),
+                                                    fullscreenDialog: false,
+                                                  )
+                                              );
+                                              print('Después de regresar de la pantalla de información');
+                                              // Regreso de la pantalla de información
+                                              print ('La longitud de _allowItems es: ' + _amountItems.length.toString());
+                                              for (var i = 0; i < _amountItems.length; i++){
+                                                setState(() {
+                                                  _visibleButttonAgr[i] = true;
+                                                  _amountItems[i].text = "0";
+                                                });
+                                              }
+                                              setState(() {
+                                                _importeTotal = 0;
+                                                _importeProductos = 0;
+                                                _importeComision = 0;
+                                                expanded = false;
+                                              });
+                                            } else if (res.statusCode == 404) {
+                                              _showPleaseWait(false);
+                                              // Como retorno que le token no es valido retorno a la página de Login
+                                              Navigator.pop(context);
+                                            } else {
+                                              _showPleaseWait(false);
+                                              _showSnackBar(json.decode(res.body)['message'], error: false);
+                                            }
+                                          }
+                                        } else {
+                                          _showSnackBar('El importe comprado no puede ser mayor a la cantidad disponible', error: false);
+                                        }
+                                      }catch (e) {
+                                        _showPleaseWait(false);
+                                        _showSnackBar(e.toString(), error: false);
+                                        print('Error' + e.toString());
                                       }
-                                      setState(() {
-                                        _importeTotal = 0;
-                                        _importeProductos = 0;
-                                        _importeComision = 0;
-                                      });
-                                    } else if (res.statusCode == 404) {
-                                      _showPleaseWait(false);
-                                      // Como retorno que le token no es valido retorno a la página de Login
-                                      Navigator.pop(context);
-                                    } else {
-                                      _showPleaseWait(false);
-                                      _showSnackBar(json.decode(res.body)['message'], error: false);
-                                    }
-                                  }
-                                } else {
-                                  _showSnackBar('El importe comprado no puede ser mayor la cantidad disponible', error: false);
-                                }
-                              }catch (e) {
-                                _showPleaseWait(false);
-                                _showSnackBar(e.toString(), error: false);
-                                print('Error' + e.toString());
-                              }
-                            },
-                            disabledColor: secondaryLightColor,
-                            disabledTextColor: secondaryTextColor,
-                            splashColor: Colors.blueAccent,
-                            child: Text (
-                              'COMPRAR',
-                              style: TextStyle (fontSize: 20.0),
-                            ),
-                          ),
-                        ),
+                                    },
+                                    disabledColor: secondaryLightColor,
+                                    disabledTextColor: secondaryTextColor,
+                                    splashColor: Colors.blueAccent,
+                                    child: Text (
+                                      'COMPRAR',
+                                      style: TextStyle (fontSize: 20.0),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            ],
+                          )
+                        ],
                       )
-                    ],
                   )
                 ],
               ),
@@ -844,29 +929,42 @@ class _ProductsAvail_State extends State {
     );
   }
 }
-class _CustomAmountPermitedDetray extends StatefulWidget{
-  int puedesRetirar;
+class _CustomAmountPermitedDetray extends StatefulWidget {
+  final int puedesRetirar;
   final GlobalKey<ScaffoldState> scafoldKey;
-  GlobalKey<_CustomListItemState> customListItemKey;
+  final GlobalKey<_CustomListItemState> customListItemKey;
+  final GlobalKey<_ProductsAvailState> productAvailWidget;
   final String banco;
   final String cuenta;
   final int cuota;
   final String jwt;
   final Map<String, dynamic> payload;
-  _CustomAmountPermitedDetray (this.puedesRetirar, this.scafoldKey, this.customListItemKey, this.banco, this.cuenta, this.cuota, this.jwt, this.payload);
+  _CustomAmountPermitedDetray ({
+      Key key,
+      this.puedesRetirar,
+      this.scafoldKey,
+      this.customListItemKey,
+      this.productAvailWidget,
+      this.banco,
+      this.cuenta,
+      this.cuota,
+      this.jwt,
+      this.payload
+  }): super(key: key);
   @override
-  _SliderAmountPermitedDetrayState createState() {
+  _CustomAmountPermitedDetrayState createState() {
 
-    return _SliderAmountPermitedDetrayState (puedesRetirar, scafoldKey, customListItemKey, banco, cuenta, cuota, jwt, payload);
+    return _CustomAmountPermitedDetrayState (puedesRetirar, scafoldKey, customListItemKey, productAvailWidget ,banco, cuenta, cuota, jwt, payload);
 
   }
 }
-class _SliderAmountPermitedDetrayState extends State {
-
-  _SliderAmountPermitedDetrayState (this.puedesRetirar, this.scafoldKey, this.customListItemKey, this.banco, this.cuenta, this.cuota, this.jwt, this.payload);
-  int puedesRetirar;
+class _CustomAmountPermitedDetrayState extends State {
+  @override
+  _CustomAmountPermitedDetrayState (this.puedesRetirar, this.scafoldKey, this.customListItemKey, this.productAvailWidget, this.banco, this.cuenta, this.cuota, this.jwt, this.payload);
+  final int puedesRetirar;
   final GlobalKey<ScaffoldState> scafoldKey;
   final GlobalKey<_CustomListItemState> customListItemKey;
+  final GlobalKey<_ProductsAvailState> productAvailWidget;
   final String banco;
   final String cuenta;
   final int cuota;
@@ -884,8 +982,8 @@ class _SliderAmountPermitedDetrayState extends State {
   var _iconColor = secondaryTextColor;
   FocusNode _nodeTextAmountToRetrieve = FocusNode();
   bool _tecladoNumerico = true;
-  bool _expandFlag = false;
-  int _puedesRetirar;
+  bool expandFlag = false;
+  int amoutToDetray;
 
 
   double _lowerValue = 0;
@@ -898,8 +996,8 @@ class _SliderAmountPermitedDetrayState extends State {
     _amountToDetray.text = "0";
     _confirmaRetiro = false;
     _tecladoNumerico = true;
-    _expandFlag = false;
-    _puedesRetirar = this.puedesRetirar;
+    expandFlag = false;
+    amoutToDetray = this.puedesRetirar;
   }
 
   @override
@@ -1004,7 +1102,10 @@ class _SliderAmountPermitedDetrayState extends State {
                     onTap: () {
                       _amountToDetray.text="";
                       setState(() {
-                        _expandFlag = true;
+                        expandFlag = true;
+                      });
+                      productAvailWidget.currentState.setState(() {
+                        productAvailWidget.currentState.expanded = false;
                       });
                     },
                     enabled: true,
@@ -1015,16 +1116,19 @@ class _SliderAmountPermitedDetrayState extends State {
                       var importe = int.parse(text);
                       //print('La cantidad cruda es:' + _rating.toString());
                       //print('El maximo que puedes retirar es: ' + _puedesRetirar.toString());
-                      if (puedesRetirar == 0) {
+                      if (amoutToDetray == 0) {
                         _showSnackBar('No puede realizar ningún retiro mas. Ha agotado su saldo.' , error: false);
                       } else if ((puedesRetirar == 0) && (customListItemKey.currentState.saldoAcumulado == 0)) {
                         _showSnackBar('No puede realizar ningún retiro. Estamos en la fecha de ajuste.', error: false);
                       }
-                      else if (importe > puedesRetirar) {
+                      else if (importe > amoutToDetray) {
                         _showSnackBar('El monto a retirar no puede ser mayor a ' + _f.format(puedesRetirar) + ' pesos.', error: false);
                       } else {
                         setState(() {
-                          _expandFlag = !_expandFlag;
+                          expandFlag = !expandFlag;
+                        });
+                        productAvailWidget.currentState.setState(() {
+                          productAvailWidget.currentState.expanded = false;
                         });
                       }
                       //print('Después de llamar al _show');
@@ -1082,7 +1186,7 @@ class _SliderAmountPermitedDetrayState extends State {
                         key: _sliderKey,
                         value: _rating.toDouble(),
                         min: 0,
-                        max: _puedesRetirar.toDouble(),
+                        max: amoutToDetray.toDouble(),
                         activeColor: Colors.white,
                         inactiveColor: Colors.black,
                         onChanged: (double newValue){
@@ -1097,6 +1201,9 @@ class _SliderAmountPermitedDetrayState extends State {
                             _textFieldActivated = false;
                             _iconColor = secondaryTextColor;
                           });
+                          productAvailWidget.currentState.setState(() {
+                            productAvailWidget.currentState.expanded = false;
+                          });
                         },
                         semanticFormatterCallback: (double newValue) {
                           return '${newValue.round()} dollars';
@@ -1108,7 +1215,7 @@ class _SliderAmountPermitedDetrayState extends State {
             ],
           ),
           ExpandableContainer (
-            expanded: _expandFlag,
+            expanded: expandFlag,
             expandedHeight: 100,
             child: new Column(
               children: <Widget>[
@@ -1194,9 +1301,9 @@ class _SliderAmountPermitedDetrayState extends State {
                                           customListItemKey.currentState.puedesRetirar = customListItemKey.currentState.puedesRetirar - (int.parse(_amountToDetray.text)+cuota);
                                         });
                                         setState(() {
-                                          _puedesRetirar = _puedesRetirar - (int.parse(_amountToDetray.text)+cuota);
-                                          payload['max_permitido'] = _puedesRetirar;
-                                          _expandFlag = false;
+                                          amoutToDetray = amoutToDetray - (int.parse(_amountToDetray.text)+cuota);
+                                          payload['max_permitido'] = amoutToDetray;
+                                          expandFlag = false;
 
                                         });
                                         _amountToDetray.text = "0";
@@ -1294,7 +1401,7 @@ class _CustomListItemState extends State {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5.0),
-      child: Row(
+      child: Row (
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Expanded(
@@ -1306,7 +1413,7 @@ class _CustomListItemState extends State {
                 children: <Widget>[
                   Row(
                     children: <Widget>[
-                      Text(
+                      Text (
                         user,
                         style: const TextStyle(
                             fontWeight: FontWeight.w500,
@@ -1346,7 +1453,7 @@ class _CustomListItemState extends State {
                           ),
                         ],
                       ),
-                      VerticalDivider(),
+                      _VerticalDivider(),
                       Column(
                         children: <Widget>[
                           Text(
@@ -1366,7 +1473,7 @@ class _CustomListItemState extends State {
                           ),
                         ],
                       ),
-                      VerticalDivider(),
+                      _VerticalDivider(),
                       Column(
                         children: <Widget>[
                           Text.rich(
@@ -1493,7 +1600,7 @@ class _UserDescriptionState extends State {
                   ),
                 ],
               ),
-              VerticalDivider(),
+              _VerticalDivider(),
               Column(
                 children: <Widget>[
                   Text(
@@ -1513,7 +1620,7 @@ class _UserDescriptionState extends State {
                   ),
                 ],
               ),
-              VerticalDivider(),
+              _VerticalDivider(),
               Column(
                 children: <Widget>[
                   Text.rich(
@@ -1643,7 +1750,7 @@ class _DetallesExtraccion extends StatelessWidget{
     );
   }
 }
-class VerticalDivider extends StatelessWidget {
+class _VerticalDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new Container(
