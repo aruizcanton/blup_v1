@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import 'package:blupv1/detalleCompra.dart';
+import 'package:blupv1/saldo.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -24,6 +25,8 @@ import 'package:blupv1/detalleRetiro.dart';
 import 'package:blupv1/bloc/cartProductsBloc.dart';
 import 'package:blupv1/model/purchasedProduct.dart';
 import 'package:blupv1/perfil.dart';
+import 'package:blupv1/cambioContraseña.dart';
+import 'package:blupv1/cambioPIN.dart';
 //import 'package:flutter_xlider/flutter_xlider.dart';
 //import 'package:keyboard_actions/keyboard_actions.dart';
 
@@ -44,6 +47,7 @@ class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState(this.jwt, this.payload);
 }
+
 class _HomePageState extends State<HomePage> {
   _HomePageState(this.jwt, this.payload);
   final String jwt;
@@ -144,36 +148,70 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        leading: Builder(
-            builder: (BuildContext context){
-              return IconButton(
-                  icon: Icon(
-                    Icons.menu,
-                    semanticLabel: 'menu',
+        elevation: 0.0,
+        flexibleSpace: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 10, right: 10),
+              child: Container(
+                alignment: Alignment.center,
+                height: 56,
+                decoration: BoxDecoration(
+                  border: Border.all(
                     color: Colors.white,
                   ),
-                  onPressed: () { Scaffold.of(context).openDrawer(); },
-                  tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                    ),
+                    BoxShadow(
+                      color: colorCajasTexto,
+                      spreadRadius: -3.0,
+                      blurRadius: 3
+                    )
+                  ],
+                  borderRadius: BorderRadius.circular(5.0),
+                ),
+              ),
+            )
+          ],
+        ),
+        leading: Builder(
+            builder: (BuildContext context){
+              return Container(
+                alignment: Alignment.centerRight,
+                padding: EdgeInsets.only(left: 16.0),
+                child: IconButton(
+                    icon: Icon(
+                      Icons.menu,
+                      semanticLabel: 'menu',
+                      color: Colors.black,
+                    ),
+                    onPressed: () { Scaffold.of(context).openDrawer(); },
+                    tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                ),
               );
             }
         ),
-        backgroundColor: primaryDarkColor,
-//        textTheme: ,
-        title: Text('BLUP',
-          style: TextStyle(
-            color: Colors.white,
-          ),
-        ),
+        backgroundColor: colorCajasTexto,
+        brightness: Brightness.light,
+        title: Image.asset('assets/KlincLogoAppBar.png'),
         actions: <Widget>[
-          IconButton(
-            icon: Icon(
-              Icons.add_alert,
-              semanticLabel: 'filter',
-              color: Colors.white,
+          Container(
+            alignment: Alignment.centerLeft,
+            padding: EdgeInsets.only(right: 16.0),
+            child: IconButton(
+              icon: Icon(
+                Icons.add_alert,
+                semanticLabel: 'filter',
+                color: Colors.black,
+              ),
+              onPressed: () {
+                print('Filter button');
+              },
             ),
-            onPressed: () {
-              print('Filter button');
-            },
           ),
         ],
       ),
@@ -263,14 +301,34 @@ class _HomePageState extends State<HomePage> {
                 Navigator.push (
                     context,
                     MaterialPageRoute(
-                      builder: (context) => Perfil(payload),
+                      builder: (context) => Perfil(jwt, payload),
                     )
                 );
               }
             ),
             ListTile(
               leading: Icon(Icons.vpn_key),
-              title: Text('Contraseña y PIN'),
+              title: Text('Cambio contraseña'),
+              onTap: () {
+                Navigator.push (
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CambioContrasenya(payload['email']),
+                    )
+                );
+              }
+            ),
+            ListTile(
+              leading: Icon(Icons.https),
+              title: Text('Cambio PIN'),
+              onTap: () {
+                Navigator.push (
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CambioPin(payload['email']),
+                    )
+                );
+              }
             ),
             ListTile(
               leading: Icon(Icons.question_answer),
@@ -313,7 +371,15 @@ class _HomePageState extends State<HomePage> {
             Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => Perfil(payload),
+                  builder: (context) => Perfil(jwt, payload),
+                )
+            );
+          }
+          if (index == 2) {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Saldo(jwt, payload),
                 )
             );
           }
@@ -697,7 +763,7 @@ class _ProductsAvailState extends State {
                                 builder: (context, snapshot) {
                                   return snapshot.data["shopItems"].length > 0
                                       ? _myListView(snapshot)
-                                      : Center(child: Text("All items in shop have been taken"));
+                                      : Center(child: Text("Productos agotados."));
                                 },
                               ),
                             )
@@ -1286,7 +1352,9 @@ class _CustomAmountPermitedDetrayState extends State {
                                             'max_permitido': customListItemKey.currentState.puedesRetirar,
                                             'extracted_amount': _amountToDetray.text,
                                             'comision': payload['comision'],
-                                            'acct_no': payload['acct_no']
+                                            'acct_no': payload['acct_no'],
+                                            'persone_name': payload['persone_name'],
+                                            'email': payload['email']
                                           })
                                       );
                                       if (res.statusCode == 200) {
@@ -1684,6 +1752,7 @@ class _DetallesExtraccion extends StatelessWidget{
                       Icons.account_balance,
                       color: Colors.black,
                     ),
+                    onPressed: null,
                   )
               ),
               Expanded(
@@ -1707,6 +1776,7 @@ class _DetallesExtraccion extends StatelessWidget{
                       Icons.closed_caption,
                       color: Colors.black,
                     ),
+                    onPressed: null,
                   )
               ),
               Expanded(
@@ -1730,6 +1800,7 @@ class _DetallesExtraccion extends StatelessWidget{
                       Icons.loop,
                       color: Colors.black,
                     ),
+                    onPressed: null,
                   )
               ),
               Expanded(
@@ -1788,7 +1859,9 @@ class _CircularValueShape extends SliderComponentShape{
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         TextDirection textDirection,
-        double value
+        double value,
+        double textScaleFactor,
+        Size sizeWithOverflow
       }
     )
   {
@@ -1867,6 +1940,8 @@ class _RoundedRectangleThumbShape extends SliderComponentShape {
         SliderThemeData sliderTheme,
         TextDirection textDirection,
         double value,
+        double textScaleFactor,
+        Size sizeWithOverflow
       }) {
     final Canvas canvas = context.canvas;
 
