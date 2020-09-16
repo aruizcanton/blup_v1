@@ -150,11 +150,10 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         elevation: 0.0,
         flexibleSpace: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Padding(
-              padding: const EdgeInsets.only(left: 10, right: 10),
+              padding: const EdgeInsets.only(left: 16, right: 16),
               child: Container(
                 alignment: Alignment.center,
                 height: 56,
@@ -168,7 +167,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     BoxShadow(
                       color: colorCajasTexto,
-                      spreadRadius: -3.0,
+                      spreadRadius: -2.0,
                       blurRadius: 3
                     )
                   ],
@@ -182,7 +181,7 @@ class _HomePageState extends State<HomePage> {
             builder: (BuildContext context){
               return Container(
                 alignment: Alignment.centerRight,
-                padding: EdgeInsets.only(left: 16.0),
+                padding: EdgeInsets.only(left: 32.0),
                 child: IconButton(
                     icon: Icon(
                       Icons.menu,
@@ -201,7 +200,7 @@ class _HomePageState extends State<HomePage> {
         actions: <Widget>[
           Container(
             alignment: Alignment.centerLeft,
-            padding: EdgeInsets.only(right: 16.0),
+            padding: EdgeInsets.only(right: 32.0),
             child: IconButton(
               icon: Icon(
                 Icons.add_alert,
@@ -216,7 +215,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: ListView(
-        padding: EdgeInsets.all(2.0),
+        padding: EdgeInsets.only(left: 16.0, right: 16.0),
         children: <Widget>[
           Card(
             clipBehavior: Clip.antiAlias,
