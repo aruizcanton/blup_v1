@@ -1,10 +1,12 @@
 import 'package:blupv1/home.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'colors.dart';
+import 'package:blupv1/colors.dart';
 import 'dart:async';
 import 'dart:io';
-import 'utils/util.dart';
+import 'package:blupv1/utils/util.dart';
+import 'package:blupv1/bloc/cartProductsBloc.dart';
 
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -120,32 +122,37 @@ class _LoginPageState extends State<LoginPage> {
           SizedBox(height: 80.0),
           Column(
             children: <Widget>[
-              Image.asset('assets/outline_monetization_on_black_48.png'),
-              SizedBox(height: 16.0),
+              Image.asset('assets/KlincLogo.png'),
+              SizedBox(height: 24.0),
               Text(
-                'Bienvenido a BLUP',
-                style: Theme.of(context).textTheme.headline,
+                'Iniciar sesión',
+                style: Theme.of(context).textTheme.headline1,
               ),
             ],
           ),
-          SizedBox(height: 120.0),
-          // TODO: Wrap Username with AccentColorOverride (103)
-          // [Name]
+          SizedBox(height: 32.0),
+          Text(
+            'Correo:',
+            style: Theme.of(context).textTheme.caption,
+          ),
+          SizedBox(height: 4.0),
           AccentColorOverride (
-            color: secondaryDarkColor,
+            color: primaryDarkColor,
             child: TextField (
               controller: _usernameController,
               decoration: InputDecoration(
-                labelText: 'E-mail',
+                labelText: 'usuario@compañía.com',
               ),
             ),
           ),
-          SizedBox(height: 12.0),
-          // TODO: Remove filled: true values (103)
-          // TODO: Wrap Password with AccentColorOverride (103)
-          // [Password]
+          SizedBox(height: 24.0),
+          Text(
+            'Contraseña:',
+            style: Theme.of(context).textTheme.caption,
+          ),
+          SizedBox(height: 4.0),
           AccentColorOverride (
-            color: secondaryDarkColor,
+            color: primaryDarkColor,
             child: TextField(
               controller: _passwordController,
               onTap: () async {
@@ -160,7 +167,9 @@ class _LoginPageState extends State<LoginPage> {
                 }
               },
               decoration: InputDecoration(
-                labelText: 'Contraseña',
+                labelText: '8 dígitos',
+                //fillColor: primaryLightColor,
+                //filled: true,
                 suffixIcon: IconButton(
                   icon: Icon(
                       _passwordNoVisible ? Icons.visibility_off : Icons.visibility
@@ -170,129 +179,179 @@ class _LoginPageState extends State<LoginPage> {
                       _passwordNoVisible = ! _passwordNoVisible;
                     });
                   },
-                )
+                ),
               ),
               obscureText: _passwordNoVisible,
             ),
           ),
-          // TODO: Add TextField widgets (101)
-          // TODO: Add button bar (101)
+          SizedBox(height: 24.0),
           Container (
             child: Row(
               children: <Widget>[
-                Checkbox(
-                  value: _recordarContrasena,
-                  onChanged: (bool newValue) {
-                    setState(() {
-                      _recordarContrasena = newValue;
-                    });
-                  },
+                Padding(
+                  padding: const EdgeInsets.only(right: 16.0),
+                  child: ClipRRect(
+                    clipBehavior: Clip.hardEdge,
+                    borderRadius: BorderRadius.all(Radius.circular(5)),
+                    child: SizedBox(
+                      width: Checkbox.width,
+                      height: Checkbox.width,
+                      child: Container(
+                        decoration: new BoxDecoration(
+                          border: Border.all(
+                            width: 1.0,
+                          ),
+                          borderRadius: new BorderRadius.circular(5.0),
+                        ),
+                        child: Theme(
+                          data: ThemeData(
+                            unselectedWidgetColor: Colors.transparent,
+                          ),
+                          child: Checkbox(
+                            value: _recordarContrasena,
+                            onChanged: (bool newValue) {
+                              setState(() {
+                                _recordarContrasena = newValue;
+                              });
+                            },
+                          )
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
                 Expanded(
                   child: Text(
                     'Recordar mi contraseña',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w500,
-                    )
+                    style: Theme.of(context).textTheme.caption,
                   ),
                 ),
               ],
             ),
           ),
-          ButtonBar(
-            // TODO: Add a beveled rectangular border to CANCEL (103)
-            children: <Widget>[
-              // TODO: Add buttons (101)
-              RaisedButton(
-                child: Text('Registrarse'),
-                elevation: 8.0, // New code
-                onPressed: () {
-                  Navigator.pushNamed(
-                      context,
-                      'login/registry',
-                      arguments: ScreenArguments(_usernameController.text)
-                  );
-                },
+          SizedBox(height: 24.0),
+          RaisedButton(
+            padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+            child: Container(
+              alignment: Alignment.center,
+              decoration: BoxDecoration (
+                shape: BoxShape.rectangle,
+                borderRadius: BorderRadius.circular(8.0),
+                gradient: LinearGradient(
+                  colors: <Color>[
+                    Color (0xFFA007EB),
+                    Color (0XFF567DF4),
+                    Color (0xFF04FFFE)
+                  ],
+                )
               ),
-
-              // TODO: Add an elevation to NEXT (103)
-              // TODO: Add a beveled rectangular border to NEXT (103)
-              RaisedButton(
-                child: Text('ENTRAR'),
-                elevation: 8.0, // New code
-                onPressed: () async {
-                  try {
-                    if (_usernameController.text == '') {
-                      _showSnackBar('Debe introducir un email.', error: false);
-                    } else if (_passwordController.text == '') {
-                      _showSnackBar(
-                          'Debe introducir una password.', error: false);
-                    } else if (!validateEmail(_usernameController.text)) {
-                      _showSnackBar(
-                          'Debe introducir un correo electrónico correcto.',
-                          error: false);
+              //padding: const EdgeInsets.fromLTRB(145.0, 20.0, 145.0, 20.0),
+              child: const Text(
+                'Entrar',
+                style: TextStyle(
+                  fontSize: 24,
+                  color: Colors.white
+                )
+              ),
+              height: 64,
+            ),
+            elevation: 8.0, // New
+            onPressed: () async {
+              try {
+                if (_usernameController.text == '') {
+                  _showSnackBar('Debe introducir un email.', error: false);
+                } else if (_passwordController.text == '') {
+                  _showSnackBar(
+                      'Debe introducir una password.', error: false);
+                } else if (!validateEmail(_usernameController.text)) {
+                  _showSnackBar(
+                      'Debe introducir un correo electrónico correcto.',
+                      error: false);
+                } else {
+                  var username = _usernameController.text;
+                  var password = _passwordController.text;
+                  var jwt = await attemptLogIn(username, password);
+                  print('Hola estoy aquí');
+                  print(jwt);
+                  //                    if (jwt != null) {
+                  if (jwt['code'] == 200) {
+                    // Guardo el token de seguridad en local
+                    storage.delete(key: "jwt");
+                    storage.write(key: "jwt", value: jwt["token"]);
+                    // Guardo el token de seguridad en la variable global appToken
+                    print('Después de la decodificacion');
+                    if (_recordarContrasena) {
+                      storage.write(key: _usernameController.text,
+                          value: _passwordController.text);
+                      print('Paso por el recordar contraseña');
+                      print('El usuario es: ' + _usernameController.text);
+                      print(
+                          'La password es: ' + _passwordController.text);
                     } else {
-                      var username = _usernameController.text;
-                      var password = _passwordController.text;
-                      var jwt = await attemptLogIn(username, password);
-                      print('Hola estoy aquí');
-                      print(jwt);
-                      //                    if (jwt != null) {
-                      if (jwt['code'] == 200) {
-                        // Guardo el token de seguridad en local
-                        storage.write(key: "jwt", value: jwt["token"]);
-                        // Guardo el token de seguridad en la variable global appToken
-                        print('Después de la decodificacion');
-                        if (_recordarContrasena) {
-                          storage.write(key: _usernameController.text,
-                              value: _passwordController.text);
-                          print('Paso por el recordar contraseña');
-                          print('El usuario es: ' + _usernameController.text);
-                          print(
-                              'La password es: ' + _passwordController.text);
-                        } else {
-                          storage.delete(key: _usernameController.text);
-                        }
-                        //Navigator.pop(context);
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => HomePage.fromBase64(jwt['token']))
-                        );
-                      } else {
-                        _showSnackBar(jwt['token'], error: false);
-                        //                    displayDialog(context, "Error de acceso", "Error: " + jwt['token']);
-                      }
+                      storage.delete(key: _usernameController.text);
                     }
-                  }catch (e) {
-                    _showSnackBar(e.toString(), error: false);
-                    print('Error' + e.toString());
+                    // Meto los productos para vender en el almacen
+                    Map<String, dynamic> otroPayload;
+                    otroPayload = json.decode(
+                        utf8.decode(
+                            base64.decode(base64.normalize(jwt['token'].split(".")[1]))
+                        )
+                    );
+                    var temp =  new List<Map<String, dynamic>>();
+                    for (var i = 0; i< otroPayload['productsAvail'].length; i++){
+                      temp.add({
+                        'product_id': otroPayload['productsAvail'][i]['PRODUCT_ID'],
+                        'product_name': otroPayload['productsAvail'][i]['PRODUCT_NAME'],
+                        'image': otroPayload['productsAvail'][i]['IMAGE'],
+                        'avail': otroPayload['productsAvail'][i]['AVAIL'],
+                        'product_price': otroPayload['productsAvail'][i]['PRODUCT_PRICE'],
+                        'comission': otroPayload['productsAvail'][i]['COMISSION']
+                      });
+                      print ('Entro en el bucle');
+                    };
+                    print ('Después de cargar bloc');
+                    bloc.removeAllFromCart();
+                    bloc.set(temp);
+                    for(var i= 0; i < bloc.allItems['shopItems'].length; i++) {
+                      print (bloc.allItems['shopItems'][i]);
+                    }
+                    print ('Justo después de imprimir los elementos del almacen');
+                    // Fin
+                    //Navigator.pop(context);
+                    Navigator.push (
+                        context,
+                        MaterialPageRoute(builder: (context) => HomePage.fromBase64(jwt['token']))
+                    );
+                  } else {
+                    _showSnackBar(jwt['token'], error: false);
+                    //                    displayDialog(context, "Error de acceso", "Error: " + jwt['token']);
                   }
-                  // TODO: Show the next page (101)
-                },
-              ),
-            ],
+                }
+              }catch (e) {
+                _showSnackBar(e.toString(), error: false);
+                print('Error' + e.toString());
+              }
+              // TODO: Show the next page (101)
+            },
           ),
-          SizedBox(height: 55.0),
+          SizedBox(height: 24.0),
           Container(
             child: Row(
               children: <Widget>[
                 Text(
                     '¿Olvidaste tu contraseña?',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                    )
+                    style: Theme.of(context).textTheme.caption,
                 ),
                 Text.rich(
                   TextSpan(
                       text: '. ',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: Theme.of(context).textTheme.caption,
                       children: <TextSpan>[
                         TextSpan(
                             text: 'Restablécela aquí',
                             style: const TextStyle(
-                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: Color(0XFF4895F6),
                               decoration: TextDecoration.underline
                             ),
                             recognizer: new TapGestureRecognizer()
@@ -308,6 +367,33 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ],
+            ),
+          ),
+          SizedBox(height: 115.0),
+          Text(
+            '¿Todavía no tines una cuenta?',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.caption,
+          ),
+          SizedBox(height: 8.0),
+          Center(
+            child: Text.rich(
+              TextSpan (
+                text: 'Regístrate',
+                style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0XFF4895F6),
+                    decoration: TextDecoration.underline
+                ),
+                recognizer: new TapGestureRecognizer()
+                ..onTap = () {
+                  Navigator.pushNamed(
+                    context,
+                    'login/registry',
+                    arguments: ScreenArguments(_usernameController.text),
+                  );
+                }
+              )
             ),
           ),
         ],
