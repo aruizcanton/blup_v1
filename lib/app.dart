@@ -27,7 +27,6 @@ import 'utils/util.dart';
 
 final storage = FlutterSecureStorage();
 
-// TODO: Convert BlupApp to stateful widget (104)
 class BlupApp extends StatelessWidget {
 
   Future<String> _jwtOrEmpty() async {
@@ -57,7 +56,8 @@ class BlupApp extends StatelessWidget {
                   print(payload);
                   if (DateTime.fromMillisecondsSinceEpoch(payload["exp"]*1000).isAfter(DateTime.now())) {
                     print("El token es válido aun");
-                    return HomePage.fromBase64(jwt);
+                    //return HomePage.fromBase64(jwt);
+                    return LoginPage();
                   } else {
                     return LoginPage();
                   }
@@ -69,9 +69,6 @@ class BlupApp extends StatelessWidget {
           }
       ),
       //initialRoute: '/login',
-      // TODO: Make currentCategory field take _currentCategory (104)
-      // TODO: Pass _currentCategory for frontLayer (104)
-      // TODO: Change backLayer field value to CategoryMenuPage (104)
       //initialRoute: '/login',
       onGenerateRoute: _getRoute,
       // TODO: Add a theme (103)
@@ -127,22 +124,29 @@ final ThemeData _blupTheme = _buildBlupTheme();
 ThemeData _buildBlupTheme() {
   final ThemeData base = ThemeData.light();
   return base.copyWith(
+    primaryColor: Colors.black,
     accentColor: secondaryColor,
-    primaryColor: primaryColor,
-    buttonTheme: base.buttonTheme.copyWith(
-      buttonColor: primaryDarkColor,
+    buttonTheme: base.buttonTheme.copyWith (
+      buttonColor: Colors.black,
       colorScheme: base.colorScheme.copyWith(
         secondary: primaryTextColor,
       ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+      ),
+      height: 64,
     ),
     buttonBarTheme: base.buttonBarTheme.copyWith(
       buttonTextTheme: ButtonTextTheme.accent,
+
     ),
     appBarTheme: base.appBarTheme.copyWith(
+      color: colorCajasTexto,
       textTheme: _buildBlupTextThemeAppBar(base.textTheme),
     ),
-    scaffoldBackgroundColor: lBlupBackgroundPreWhite,
-    cardColor: secondaryColor,
+    scaffoldBackgroundColor: colorFondo,
+    //backgroundColor: kBlupIndigo50,
+    cardColor: colorCajasTexto,
     textSelectionColor: secondaryLightColor,
     errorColor: kBlupErrorRed,
     // TODO: Add the text themes (103)
@@ -153,9 +157,12 @@ ThemeData _buildBlupTheme() {
     primaryIconTheme: base.iconTheme.copyWith(
         color: primaryDarkColor
     ),
-    // TODO: Decorate the inputs (103)
     inputDecorationTheme: InputDecorationTheme(
-      border: OutlineInputBorder(),
+      border: OutlineInputBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(5.0)),
+      ),
+      fillColor: colorCajasTexto,
+      filled: true,
     ),
   );
 }
@@ -163,37 +170,38 @@ ThemeData _buildBlupTheme() {
 // TODO: Build a Blup Text Theme (103)
 TextTheme _buildBlupTextTheme(TextTheme base) {
   return base.copyWith(
-    headline: base.headline.copyWith(
-      fontWeight: FontWeight.w500,
+
+    headline1: base.headline1.copyWith(
+      fontWeight: FontWeight.bold,
+      fontSize: 32.0
     ),
-    title: base.title.copyWith(
-        fontSize: 18.0
+    headline2: base.headline2.copyWith(
+        fontSize: 24.0
     ),
     caption: base.caption.copyWith(
-      fontWeight: FontWeight.w400,
-      fontSize: 14.0,
+      fontSize: 16.0,
     ),
   ).apply(
-    fontFamily: 'Rubik',
-    displayColor: primaryDarkColor,
-    bodyColor: primaryDarkColor,
+    fontFamily: 'Helvetica Neu',
+    displayColor: Colors.black,
+    bodyColor: Colors.black,
   );
 }
 TextTheme _buildBlupTextThemeAppBar(TextTheme base) {
   return base.copyWith(
-    headline: base.headline.copyWith(
-      fontWeight: FontWeight.w500,
+    headline1: base.headline1.copyWith(
+      fontWeight: FontWeight.bold,
+      height: 32.0,
     ),
-    title: base.title.copyWith(
-        fontSize: 18.0
+    headline2: base.headline2.copyWith(
+        fontSize: 24.0
     ),
     caption: base.caption.copyWith(
-      fontWeight: FontWeight.w400,
-      fontSize: 14.0,
+      fontSize: 16.0,
     ),
   ).apply(
-    fontFamily: 'Rubik',
-    displayColor: primaryTextColor,
-    bodyColor: primaryTextColor,
+    fontFamily: 'Helvetica Neu',
+    displayColor: Colors.black,
+    bodyColor: Colors.black,
   );
 }
