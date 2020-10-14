@@ -243,135 +243,221 @@ class TiendaState extends State<Tienda> with SingleTickerProviderStateMixin {
         print ('El ancho de la imagen es: ' + anchoImagen.toString());
         //var carro = context.watch<CarroCompra>();
 
-        return ListView.builder(
-          padding: EdgeInsets.only(left: 0.0, right: 0.0, top: 24),
-          itemCount: almacen.itemsProductosComprados.length,
-          //itemCount: almacen.itemsProductosComprados.length,
-          itemBuilder: (BuildContext context, int index){
-            return Card(
-              borderOnForeground: true,
-              clipBehavior: Clip.antiAlias,
-              color: colorFondo,
-              elevation: 1,
-              shape: ContinuousRectangleBorder(
-                borderRadius: BorderRadius.circular(0.0),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+        // Implemento el Streambuilder que se conecta con el almacen que tiene los productos comprados
+
+        // Fin de la implementacion de Streambuilder
+
+        return StreamBuilder(
+          initialData: bloc.allItems,
+          stream: bloc.getStream,
+          builder: (context, snapshot) {
+            return snapshot.data['cartItems'].length > 0
+            ? ListView.builder(
+              padding: EdgeInsets.only(left: 0.0, right: 0.0, top: 24),
+              itemCount: snapshot.data['cartItems'].length,
+              //itemCount: almacen.itemsProductosComprados.length,
+              itemBuilder: (BuildContext context, int index){
+                return Card(
+                  borderOnForeground: true,
+                  clipBehavior: Clip.antiAlias,
+                  color: colorFondo,
+                  elevation: 1,
+                  shape: ContinuousRectangleBorder(
+                    borderRadius: BorderRadius.circular(0.0),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: EdgeInsets.only(left: 15.0, right: 16.0, top: 20.0, bottom: 20.0),
-                        alignment: Alignment.center,
-                        width: anchoImagen.toDouble(),
-                        //height: 120.0,
-                        child: AspectRatio(
-                            aspectRatio: 3.0 / 2.0,
-                            child: CachedNetworkImage(
-                              placeholder: (context, url) => CircularProgressIndicator(),
-                              imageUrl: SERVER_IP + '/image/products/' + almacen.itemsProductosComprados[index].image,
-                            )
-                        ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Row(
                         children: [
-                          Text(
-                            almacen.itemsProductosComprados[index].product_name,
-                            style: TextStyle(
-                              fontFamily: 'SF Pro Display',
-                              fontWeight: FontWeight.normal,
-                              fontStyle: FontStyle.normal,
-                              fontSize: 16,
-                              color: Color(0xFF303034),
+                          Container(
+                            padding: EdgeInsets.only(left: 15.0, right: 16.0, top: 20.0, bottom: 20.0),
+                            alignment: Alignment.center,
+                            width: anchoImagen.toDouble(),
+                            //height: 120.0,
+                            child: AspectRatio(
+                                aspectRatio: 3.0 / 2.0,
+                                child: CachedNetworkImage(
+                                  placeholder: (context, url) => CircularProgressIndicator(),
+                                  //imageUrl: SERVER_IP + '/image/products/' + almacen.itemsProductosComprados[index].image,
+                                  imageUrl: SERVER_IP + '/image/products/' + snapshot.data['cartItems'][index].image,
+                                )
                             ),
                           ),
-                          SizedBox(height: 6.0),
-                          Text(
-                            //'Código digital',
-                            almacen.itemsProductosComprados[index].product_type,
-                            style: TextStyle(
-                              fontFamily: 'SF Pro Display',
-                              fontWeight: FontWeight.w300,
-                              fontStyle: FontStyle.normal,
-                              fontSize: 12,
-                              color: Color(0xFF36B0F8),
-                            ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                //almacen.itemsProductosComprados[index].product_name,
+                                snapshot.data['cartItems'][index].product_name,
+                                style: TextStyle(
+                                  fontFamily: 'SF Pro Display',
+                                  fontWeight: FontWeight.normal,
+                                  fontStyle: FontStyle.normal,
+                                  fontSize: 16,
+                                  color: Color(0xFF303034),
+                                ),
+                              ),
+                              SizedBox(height: 6.0),
+                              Text(
+                                //'Código digital',
+                                //almacen.itemsProductosComprados[index].product_type,
+                                snapshot.data['cartItems'][index].product_type,
+                                style: TextStyle(
+                                  fontFamily: 'SF Pro Display',
+                                  fontWeight: FontWeight.w300,
+                                  fontStyle: FontStyle.normal,
+                                  fontSize: 12,
+                                  color: Color(0xFF36B0F8),
+                                ),
+                              ),
+                              SizedBox(height: 4.0),
+                              Text(
+                                //'Cinemex',
+                                //almacen.itemsProductosComprados[index].brand,
+                                snapshot.data['cartItems'][index].brand,
+                                style: TextStyle(
+                                  fontFamily: 'SF Pro Display',
+                                  fontWeight: FontWeight.w300,
+                                  fontStyle: FontStyle.normal,
+                                  fontSize: 12,
+                                  color: Color(0xFF6C6D77),
+                                ),
+                              ),
+                            ],
                           ),
-                          SizedBox(height: 4.0),
-                          Text(
-                            //'Cinemex',
-                            almacen.itemsProductosComprados[index].brand,
-                            style: TextStyle(
-                              fontFamily: 'SF Pro Display',
-                              fontWeight: FontWeight.w300,
-                              fontStyle: FontStyle.normal,
-                              fontSize: 12,
-                              color: Color(0xFF6C6D77),
+                          Container(
+                            alignment: Alignment.centerRight,
+                            padding: EdgeInsets.fromLTRB(16.0, 0.0, 0.0, 0.0),
+                            child: FlatButton(
+                                padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+                                onPressed: () {
+                                  Navigator.push(context, MaterialPageRoute(
+                                    //builder: (context) => ConsultarProdComprado(jwt, payload, almacen.itemsProductosComprados[index]),     // 0 porque lo llamo desde la tab de saldo actual
+                                    builder: (context) => ConsultarProdComprado(jwt, payload, snapshot.data['cartItems'][index]),     // 0 porque lo llamo desde la tab de saldo actual
+                                  ));
+                                },
+                                child: Container(
+                                  alignment: Alignment.center,
+                                  padding: EdgeInsets.all(2.0),
+                                  decoration: BoxDecoration (
+                                      shape: BoxShape.rectangle,
+                                      borderRadius: BorderRadius.circular(4.0),
+                                      gradient: LinearGradient(
+                                        colors: <Color>[
+                                          Color (0xFFA007EB),
+                                          Color (0XFF567DF4),
+                                          Color (0xFF04FFFE)
+                                        ],
+                                      )
+                                  ),
+                                  child: Container(
+                                    //padding: EdgeInsets.all(3.0),
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.rectangle,
+                                      borderRadius: BorderRadius.circular(4.0),
+                                      color: colorFondo,
+                                      //border: Border.all(color: Color(0xFF303034), width: 2.0),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+                                      child: Text (
+                                        'Consultar',
+                                        style: TextStyle (
+                                          fontFamily: 'SF Pro Display',
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF303034),
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                    //height: 38,
+                                  ),
+                                  height: 40,
+                                )
                             ),
-                          ),
+                          )
+
                         ],
                       ),
-                      Container(
-                        alignment: Alignment.centerRight,
-                        padding: EdgeInsets.fromLTRB(16.0, 0.0, 0.0, 0.0),
-                        child: FlatButton(
-                            padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
-                            onPressed: () {
-                              Navigator.push(context, MaterialPageRoute(
-                                builder: (context) => ConsultarProdComprado(jwt, payload, almacen.itemsProductosComprados[index]),     // 0 porque lo llamo desde la tab de saldo actual
-                              ));
-                            },
-                            child: Container(
-                              alignment: Alignment.center,
-                              padding: EdgeInsets.all(2.0),
-                              decoration: BoxDecoration (
-                                  shape: BoxShape.rectangle,
-                                  borderRadius: BorderRadius.circular(4.0),
-                                  gradient: LinearGradient(
-                                    colors: <Color>[
-                                      Color (0xFFA007EB),
-                                      Color (0XFF567DF4),
-                                      Color (0xFF04FFFE)
-                                    ],
-                                  )
-                              ),
-                              child: Container(
-                                //padding: EdgeInsets.all(3.0),
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.rectangle,
-                                  borderRadius: BorderRadius.circular(4.0),
-                                  color: colorFondo,
-                                  //border: Border.all(color: Color(0xFF303034), width: 2.0),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.only(left: 16.0, right: 16.0),
-                                  child: Text (
-                                    'Consultar',
-                                    style: TextStyle (
-                                      fontFamily: 'SF Pro Display',
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFF303034),
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                                //height: 38,
-                              ),
-                              height: 40,
-                            )
-                        ),
-                      )
-
                     ],
                   ),
-                ],
+                );
+              },
+            )
+            : Container(
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                  boxShadow: [
+
+                    BoxShadow(
+                      color: Color(0xFFE0E4EE),
+                      offset: Offset(4.0,4.0),
+                      spreadRadius: 1.0,
+                      blurRadius: 15.0,
+                    ),
+                    BoxShadow(
+                      color: Colors.white,
+                      offset: Offset(-4.0, -4.0),
+                      spreadRadius: 1.0,
+                      blurRadius: 15.0,
+                    ),
+
+
+                  ]
+              ),
+              child: Card(
+                clipBehavior: Clip.antiAlias,
+                color: colorFondo,
+                elevation: 6,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(height: 30),
+                      Image.asset('assets/detalleSaldoFactura.png'),
+                      SizedBox(height: 40),
+                      Text(
+                        'Aún no tiene productos comprados',
+                        style: TextStyle(
+                            fontFamily: 'SF Pro Display',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 24
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox (height: 16,),
+                      Text(
+                        'Aquí podrás ver los productos comprados',
+                        style: TextStyle(
+                            fontFamily: 'SF Pro Display',
+                            fontWeight: FontWeight.normal,
+                            fontSize: 16,
+                            fontStyle: FontStyle.italic
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      Text(
+                        'del período de su nómina actual ',
+                        style: TextStyle(
+                          fontFamily: 'SF Pro Display',
+                          fontWeight: FontWeight.normal,
+                          fontSize: 16,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 48),
+                    ],
+                  ),
+                ),
               ),
             );
-          },
+          }
         );
       },
     );
