@@ -1,5 +1,6 @@
-import 'package:blupv1/model/product.dart';
 import 'dart:async';
+
+import 'package:blupv1/model/productComprado.dart';
 
 class CartProductsBloc {
   /// The [cartStreamController] is an object of the StreamController class
@@ -45,7 +46,7 @@ class CartProductsBloc {
   Map allItems = {
     //'shopItems' : [{'product_id':1, 'product_name':'AMAZON', 'image':'amazon.png', 'avail':5, 'product_price':500, 'comission':10}],
     'shopItems' : List<Map<String, dynamic>>(),
-    'cartItems' : List<Map<String, dynamic>>()
+    'cartItems' : List<ProductComprado>()
   };
 
   void addToCart(item) {
