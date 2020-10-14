@@ -1,8 +1,12 @@
 import 'package:blupv1/saldo.dart';
+import 'package:blupv1/tienda.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'package:blupv1/colors.dart';
+import 'package:blupv1/home.dart';
+import 'package:blupv1/cambioContraseña.dart';
+import 'package:blupv1/cambioPIN.dart';
 
 class Perfil extends StatefulWidget {
   Perfil(this.jwt, this.payload);
@@ -52,15 +56,30 @@ class PerfilState extends State {
               borderRadius: BorderRadius.circular(10.0),
               gradient: LinearGradient(
                   colors: <Color>[
-                    //Color (0xFFA007EB),
+                    Color (0xFFA007EB),
+                    ////Color (0XFF567DF4),
+                    ////Color (0xFF04FFFE)
+                    //Color (0xFFAD87EF),
+                    //Color (0xFF7D3EEF),
+                    //Color (0xFF5F6FF3),
+                    //Color (0xFF3FA2F7),
+                    //Color (0xFF13E9FC),
+                    //Color (0xFF08F8FD)
+
+
+                    Color (0xFFA007EB),
                     //Color (0XFF567DF4),
                     //Color (0xFF04FFFE)
-                    Color (0xFFAD87EF),
+
+
+                    //Color (0xFFAD87EF),
                     Color (0xFF7D3EEF),
                     Color (0xFF5F6FF3),
                     Color (0xFF3FA2F7),
                     Color (0xFF13E9FC),
                     Color (0xFF08F8FD)
+
+
                   ]
               )
             ),
@@ -84,13 +103,20 @@ class PerfilState extends State {
                                 //Color (0xFFA007EB),
                                 //Color (0XFF567DF4),
                                 //Color (0xFF04FFFE)
-                                Color (0xFF8325EC),
-                                Color (0xFF5923E6),
-                                Color (0xFF5B25DF),
-                                Color (0xFF572FE0),
-                                Color (0xFF5335E0),
-                                Color (0xFF4D46E1),
-                                Color (0xFF494BE9),
+
+                                //Color (0xFFA007EB),
+                                //Color (0xFF7D3EEF),
+                                //Color (0xFF5F6FF3),
+                                //Color (0xFF3FA2F7),
+                                //Color (0xFF13E9FC),
+                                //Color (0xFF08F8FD)
+                                Color (0xFF5900d9),
+                                Color (0xFF5901DA),
+                                Color (0xFF430ADF),
+                                Color (0xFF0F64EE),
+                                Color (0xFF03ADF5),
+                                Color (0xFF01D0F9)
+
                               ]
                           )
                         ),
@@ -591,43 +617,129 @@ class PerfilState extends State {
             Container(
               height: 80.0,
               child:DrawerHeader(
-                  child: Text(
-                    'BLUP',
-                    style: TextStyle(
-                      color: Colors.white,
-                    ),
-                  ),
-                  decoration: BoxDecoration(
-                      color: primaryColor
+                  margin: EdgeInsets.all(0.0),
+                  padding: EdgeInsets.all(0.0),
+                  child: Container(
+                    //padding: EdgeInsets.fromLTRB(0.0, 4.0, 0.0, 4.0),
+                    //height: 48.0,
+                    child: Image.asset('assets/KlinkLogoDrawMenu.png'),
                   )
               ),
             ),
             ListTile(
-                leading: Icon(Icons.person_outline),
-                title: Text('Perfil'),
+                leading: Image.asset('assets/perfilNombreUsuario.png'),
+                title: Text(
+                  'Perfil',
+                  style: TextStyle(
+                      fontFamily: 'Helvetica Neue',
+                      fontSize: 16,
+                      fontStyle: FontStyle.normal,
+                      fontWeight: FontWeight.normal
+                  ),
+                ),
+                shape: Border(bottom: BorderSide(color: Color(0xFFD8D9E3))),
                 onTap: () {
-                  Navigator.pop(context);
+                  Navigator.pushReplacement (
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Perfil(jwt, payload),
+                      )
+                  );
                 }
             ),
             ListTile(
-              leading: Icon(Icons.vpn_key),
-              title: Text('Cambio contraseña'),
+                leading: Image.asset('assets/candadoDrawer.png'),
+                title: Text(
+                  'Cambio contraseña',
+                  style: TextStyle(
+                      fontFamily: 'Helvetica Neue',
+                      fontSize: 16,
+                      fontStyle: FontStyle.normal,
+                      fontWeight: FontWeight.normal
+                  ),
+                ),
+                shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
+                onTap: () {
+                  Navigator.push (
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CambioContrasenya(payload['email']),
+                      )
+                  );
+                }
             ),
             ListTile(
-              leading: Icon(Icons.https),
-              title: Text('Cambio PIN'),
+                leading: Image.asset('assets/candadoDrawer.png'),
+                title: Text(
+                  'Cambio PIN',
+                  style: TextStyle(
+                      fontFamily: 'Helvetica Neue',
+                      fontSize: 16,
+                      fontStyle: FontStyle.normal,
+                      fontWeight: FontWeight.normal
+                  ),
+                ),
+                shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
+                onTap: () {
+                  Navigator.push (
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CambioPin(payload['email']),
+                      )
+                  );
+                }
             ),
             ListTile(
-              leading: Icon(Icons.question_answer),
-              title: Text('Soporte'),
+              leading: Image.asset('assets/soporteDrawer.png'),
+              title: Text(
+                'Soporte',
+                style: TextStyle(
+                    fontFamily: 'Helvetica Neue',
+                    fontSize: 16,
+                    fontStyle: FontStyle.normal,
+                    fontWeight: FontWeight.normal
+                ),
+              ),
+              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
+            ),
+            // ListTile(
+            //   leading: Image.asset('assets/ganaRetirosDrawer.png'),
+            //   title: Text(
+            //     'Gana Retiros',
+            //     style: TextStyle(
+            //         fontFamily: 'Helvetica Neue',
+            //         fontSize: 16,
+            //         fontStyle: FontStyle.normal,
+            //         fontWeight: FontWeight.normal
+            //     ),
+            //   ),
+            //   shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
+            // ),
+            ListTile(
+              leading: Image.asset('assets/preguntasFreqDrawer.png'),
+              title: Text(
+                'Preguntas frecuentes',
+                style: TextStyle(
+                    fontFamily: 'Helvetica Neue',
+                    fontSize: 16,
+                    fontStyle: FontStyle.normal,
+                    fontWeight: FontWeight.normal
+                ),
+              ),
+              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
             ),
             ListTile(
-              leading: Icon(Icons.live_help),
-              title: Text('Preguntas frecuentes'),
-            ),
-            ListTile(
-              leading: Icon(Icons.error),
-              title: Text('Términos y condiciones'),
+              leading: Image.asset('assets/terminosYCondiDrawer.png'),
+              title: Text(
+                'Términos y condiciones',
+                style: TextStyle(
+                    fontFamily: 'Helvetica Neue',
+                    fontSize: 16,
+                    fontStyle: FontStyle.normal,
+                    fontWeight: FontWeight.normal
+                ),
+              ),
+              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
             )
           ],
         ),
@@ -736,9 +848,11 @@ class _BottonNavigationBarState extends State<_BottonNavigationBar>{
                         _iconPerfil = _iconPerfilOff;
                         _textPerfil = _textPerfilOff;
                         _fontWeightPerfil = _fontOff;
-
-                        print ('Paso por el click de Retiro');
                       });
+                      print ('Paso por el click de Retiro');
+                      Navigator.pushReplacement(context, MaterialPageRoute(
+                        builder: (context) => HomePage(jwt, payload),
+                      ));
                     },
                     padding: EdgeInsets.all(0.0),
                     constraints: BoxConstraints(maxWidth: 24.0, maxHeight: 24.0),
@@ -778,6 +892,9 @@ class _BottonNavigationBarState extends State<_BottonNavigationBar>{
                         _fontWeightPerfil = _fontOff;
                         print('Paso por el Click de Tienda');
                       });
+                      Navigator.pushReplacement(context, MaterialPageRoute(
+                        builder: (context) => Tienda(jwt, payload),
+                      ));
                     },
                     padding: EdgeInsets.all(0.0),
                     constraints: BoxConstraints(maxWidth: 29.0, maxHeight: 24.0),
@@ -844,24 +961,7 @@ class _BottonNavigationBarState extends State<_BottonNavigationBar>{
                   IconButton (
                     icon: _iconPerfil,
                     onPressed: (){
-                      setState(() {
-                        _iconRetiro = _iconRetiroOff;
-                        _textRetiro = _textRetiroOff;
-                        _fontWeightRetiro = _fontOff;
-                        _iconTienda = _iconTiendaOff;
-                        _textTienda = _textTiendaOff;
-                        _fontWeightTienda = _fontOff;
-                        _iconSaldo = _iconSaldoOff;
-                        _textSaldo = _textSaldoOff;
-                        _fontWeightSaldo = _fontOff;
-                        _iconPerfil = _iconPerfilOn;
-                        _textPerfil = _textPerfilOn;
-                        _fontWeightPerfil = _fontOn;
-                      });
                       print ('Paso por el click de Perfil');
-                      Navigator.pushReplacement(context, MaterialPageRoute(
-                        builder: (context) => Perfil(jwt, payload),
-                      ));
                     },
                     padding: EdgeInsets.only(bottom: 0.0),
                     constraints: BoxConstraints(maxWidth: 22.0, maxHeight: 22.0),
