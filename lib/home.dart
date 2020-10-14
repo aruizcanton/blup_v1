@@ -13,6 +13,7 @@
 // limitations under the License.
 import 'package:blupv1/detalleCompra.dart';
 import 'package:blupv1/saldo.dart';
+import 'package:blupv1/tienda.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -183,13 +184,11 @@ class _HomePageState extends State<HomePage> {
                 alignment: Alignment.centerRight,
                 padding: EdgeInsets.only(left: 32.0),
                 child: IconButton(
-                    icon: Icon(
-                      Icons.menu,
-                      semanticLabel: 'menu',
-                      color: Colors.black,
-                    ),
-                    onPressed: () { Scaffold.of(context).openDrawer(); },
-                    tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                  padding: EdgeInsets.all(0.0),
+                  color: Colors.black,
+                  icon: Image.asset('assets/menuAppBar.png'),
+                  onPressed: () { Scaffold.of(context).openDrawer(); },
+                  tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
                 ),
               );
             }
@@ -202,11 +201,9 @@ class _HomePageState extends State<HomePage> {
             alignment: Alignment.centerLeft,
             padding: EdgeInsets.only(right: 32.0),
             child: IconButton(
-              icon: Icon(
-                Icons.add_alert,
-                semanticLabel: 'filter',
-                color: Colors.black,
-              ),
+              padding: EdgeInsets.all(0.0),
+              icon: Image.asset('assets/campanaAppBar.png'),
+              color: Colors.black,
               onPressed: () {
                 print('Filter button');
               },
@@ -219,30 +216,30 @@ class _HomePageState extends State<HomePage> {
         children: <Widget>[
           SizedBox(height: 24.0),
           Card(
-            elevation: 6,
+            elevation: 18,
             clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      _CustomListItem(
-                        key: _customListItemKey,
-                        user: payload['persone_name'],
-                        saldoAcumulado: payload['salario_acumulado'],
-                        puedesRetirar: payload['max_permitido'],
-                        diasAlaNomina: payload['dias_nomina'],
-                      ),
-                    ],
-                )
-              ]
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  _CustomListItem(
+                    key: _customListItemKey,
+                    //user: payload['persone_name'],
+                    user: payload['user_firstname'],
+                    empresa: payload['empresa'],
+                    saldoAcumulado: payload['salario_acumulado'],
+                    puedesRetirar: payload['max_permitido'],
+                    diasAlaNomina: payload['dias_nomina'],
+                  ),
+                ],
             ),
           ),
           SizedBox(height: 32),
-          Card(
-            elevation: 2,
+          payload['max_permitido'] >= 200
+          ? Card(
+            elevation: 6,
             clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
@@ -259,6 +256,101 @@ class _HomePageState extends State<HomePage> {
                    payload: payload,
                  ),
               ],
+            ),
+          )
+          : Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(10.0)),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFFE0E4EE),
+                  offset: Offset(4.0,4.0),
+                  spreadRadius: 1.0,
+                  blurRadius: 15.0,
+                ),
+                BoxShadow(
+                  color: Colors.white,
+                  offset: Offset(-4.0, -4.0),
+                  spreadRadius: 1.0,
+                  blurRadius: 15.0,
+                ),
+              ]
+            ),
+            child: Card(
+              clipBehavior: Clip.antiAlias,
+              elevation: 6,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(height: 32),
+                    Image.asset('assets/dinero.png'),
+                    SizedBox(height: 16),
+                    Text(
+                      'Aún no has acumulado',
+                      style: TextStyle(
+                          fontFamily: 'SF Pro Display',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 24
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    Text(
+                      'suficiente salario',
+                      style: TextStyle(
+                          fontFamily: 'SF Pro Display',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 24
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'En este momento no puedes',
+                      style: TextStyle(
+                        fontFamily: 'SF Pro Display',
+                        fontWeight: FontWeight.normal,
+                        fontStyle: FontStyle.italic,
+                        fontSize: 16,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    Text(
+                      'realizar un retiro',
+                      style: TextStyle(
+                        fontFamily: 'SF Pro Display',
+                        fontWeight: FontWeight.normal,
+                        fontStyle: FontStyle.italic,
+                        fontSize: 16,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 32),
+                    FlatButton(
+                      padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+                      child: Container(
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration (
+                          shape: BoxShape.rectangle,
+                          borderRadius: BorderRadius.circular(8.0),
+                          color: Color(0xFFADB0C7),
+                        ),
+                        child: const Text(
+                          'Monto mínimo \$200',
+                          style: TextStyle(
+                              fontSize: 24,
+                              color: Colors.white
+                          ),
+                        ),
+                        height: 64,
+                      ),
+                    ),
+                    SizedBox(height: 32),
+                  ],
+                ),
+              ),
             ),
           ),
           //Card(
@@ -283,22 +375,29 @@ class _HomePageState extends State<HomePage> {
             Container(
               height: 80.0,
               child:DrawerHeader(
-                  child: Text(
-                    'BLUP',
-                    style: TextStyle(
-                      color: Colors.white,
-                    ),
-                  ),
-                  decoration: BoxDecoration(
-                      color: primaryColor
-                  )
+                margin: EdgeInsets.all(0.0),
+                padding: EdgeInsets.all(0.0),
+                child: Container(
+                  //padding: EdgeInsets.fromLTRB(0.0, 4.0, 0.0, 4.0),
+                  //height: 48.0,
+                  child: Image.asset('assets/KlinkLogoDrawMenu.png'),
+                )
               ),
             ),
             ListTile(
-              leading: Icon(Icons.person_outline),
-              title: Text('Perfil'),
+              leading: Image.asset('assets/perfilNombreUsuario.png'),
+              title: Text(
+                'Perfil',
+                style: TextStyle(
+                  fontFamily: 'Helvetica Neue',
+                  fontSize: 16,
+                  fontStyle: FontStyle.normal,
+                  fontWeight: FontWeight.normal
+                ),
+              ),
+              shape: Border(bottom: BorderSide(color: Color(0xFFD8D9E3))),
               onTap: () {
-                Navigator.push (
+                Navigator.pushReplacement (
                     context,
                     MaterialPageRoute(
                       builder: (context) => Perfil(jwt, payload),
@@ -307,8 +406,17 @@ class _HomePageState extends State<HomePage> {
               }
             ),
             ListTile(
-              leading: Icon(Icons.vpn_key),
-              title: Text('Cambio contraseña'),
+              leading: Image.asset('assets/candadoDrawer.png'),
+              title: Text(
+                'Cambio contraseña',
+                style: TextStyle(
+                    fontFamily: 'Helvetica Neue',
+                    fontSize: 16,
+                    fontStyle: FontStyle.normal,
+                    fontWeight: FontWeight.normal
+                ),
+              ),
+              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
               onTap: () {
                 Navigator.push (
                     context,
@@ -319,8 +427,17 @@ class _HomePageState extends State<HomePage> {
               }
             ),
             ListTile(
-              leading: Icon(Icons.https),
-              title: Text('Cambio PIN'),
+              leading: Image.asset('assets/candadoDrawer.png'),
+              title: Text(
+                'Cambio PIN',
+                style: TextStyle(
+                    fontFamily: 'Helvetica Neue',
+                    fontSize: 16,
+                    fontStyle: FontStyle.normal,
+                    fontWeight: FontWeight.normal
+                ),
+              ),
+              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
               onTap: () {
                 Navigator.push (
                     context,
@@ -331,25 +448,66 @@ class _HomePageState extends State<HomePage> {
               }
             ),
             ListTile(
-              leading: Icon(Icons.question_answer),
-              title: Text('Soporte'),
+              leading: Image.asset('assets/soporteDrawer.png'),
+              title: Text(
+                'Soporte',
+                style: TextStyle(
+                    fontFamily: 'Helvetica Neue',
+                    fontSize: 16,
+                    fontStyle: FontStyle.normal,
+                    fontWeight: FontWeight.normal
+                ),
+              ),
+              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
+            ),
+            //ListTile(
+            //  leading: Image.asset('assets/ganaRetirosDrawer.png'),
+            //  title: Text(
+            //    'Gana Retiros',
+            //    style: TextStyle(
+            //        fontFamily: 'Helvetica Neue',
+            //        fontSize: 16,
+            //        fontStyle: FontStyle.normal,
+            //        fontWeight: FontWeight.normal
+            //    ),
+            //  ),
+            //  shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
+            //),
+            ListTile(
+              leading: Image.asset('assets/preguntasFreqDrawer.png'),
+              title: Text(
+                'Preguntas frecuentes',
+                style: TextStyle(
+                    fontFamily: 'Helvetica Neue',
+                    fontSize: 16,
+                    fontStyle: FontStyle.normal,
+                    fontWeight: FontWeight.normal
+                ),
+              ),
+              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
             ),
             ListTile(
-              leading: Icon(Icons.live_help),
-              title: Text('Preguntas frecuentes'),
-            ),
-            ListTile(
-              leading: Icon(Icons.error),
-              title: Text('Términos y condiciones'),
+              leading: Image.asset('assets/terminosYCondiDrawer.png'),
+              title: Text(
+                'Términos y condiciones',
+                style: TextStyle(
+                    fontFamily: 'Helvetica Neue',
+                    fontSize: 16,
+                    fontStyle: FontStyle.normal,
+                    fontWeight: FontWeight.normal
+                ),
+              ),
+              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
             )
           ],
         ),
       ),
-      bottomNavigationBar: _BottonNavigationBar(jwt: jwt, payload: payload,),
+      bottomNavigationBar: _BottonNavigationBar(jwt: jwt, payload: payload),
     );
 
   }
 }
+
 class _BottonNavigationBar extends StatefulWidget {
   final String jwt;
   final Map<String, dynamic> payload;
@@ -418,183 +576,171 @@ class _BottonNavigationBarState extends State<_BottonNavigationBar>{
     return Padding(
       padding: const EdgeInsets.only(left: 8.0, right: 8.0),
       child: Container(
-        height: 70,
-        padding: EdgeInsets.only(top: 2, bottom: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(24.0),
-            topRight: Radius.circular(24.0),
+          height: 70,
+          padding: EdgeInsets.only(top: 2, bottom: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24.0),
+              topRight: Radius.circular(24.0),
+            ),
+            color: Colors.white,
           ),
-          color: Colors.white,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton (
-                  icon: _iconRetiro,
-                  onPressed: () {
-                    setState(() {
-                      _iconRetiro = _iconRetiroOn;
-                      _textRetiro = _textRetiroOn;
-                      _fontWeightRetiro = _fontOn;
-                      _iconTienda = _iconTiendaOff;
-                      _textTienda = _textTiendaOff;
-                      _fontWeightTienda = _fontOff;
-                      _iconSaldo = _iconSaldoOff;
-                      _textSaldo = _textSaldoOff;
-                      _fontWeightSaldo = _fontOff;
-                      _iconPerfil = _iconPerfilOff;
-                      _textPerfil = _textPerfilOff;
-                      _fontWeightPerfil = _fontOff;
-
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton (
+                    icon: _iconRetiro,
+                    onPressed: () {
                       print ('Paso por el click de Retiro');
-                    });
-                  },
-                  padding: EdgeInsets.all(0.0),
-                  constraints: BoxConstraints(maxWidth: 24.0, maxHeight: 24.0),
-                  alignment: Alignment.center,
-                ),
-                SizedBox(height: 2.0),
-                Text(
-                    'Retiro',
-                    style: TextStyle(
+                    },
+                    padding: EdgeInsets.all(0.0),
+                    constraints: BoxConstraints(maxWidth: 24.0, maxHeight: 24.0),
+                    alignment: Alignment.center,
+                  ),
+                  SizedBox(height: 2.0),
+                  Text(
+                      'Retiro',
+                      style: TextStyle(
                         color: _textRetiro,
                         fontFamily: 'Helvetica Neue',
                         fontWeight: _fontWeightRetiro,
                         fontSize: 16,
-                    )
-                ),
-              ],
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton (
-                  icon: _iconTienda,
-                  onPressed: () {
-                    setState(() {
-                      _iconRetiro = _iconRetiroOff;
-                      _textRetiro = _textRetiroOff;
-                      _fontWeightRetiro = _fontOff;
-                      _iconTienda = _iconTiendaOn;
-                      _textTienda = _textTiendaOn;
-                      _fontWeightTienda = _fontOn;
-                      _iconSaldo = _iconSaldoOff;
-                      _textSaldo = _textSaldoOff;
-                      _fontWeightSaldo = _fontOff;
-                      _iconPerfil = _iconPerfilOff;
-                      _textPerfil = _textPerfilOff;
-                      _fontWeightPerfil = _fontOff;
-                      print('Paso por el Click de Tienda');
-                    });
-                  },
-                  padding: EdgeInsets.all(0.0),
-                  constraints: BoxConstraints(maxWidth: 29.0, maxHeight: 24.0),
-                  alignment: Alignment.center,
-                ),
-                SizedBox(height: 2.0),
-                Text(
-                    'Tienda',
-                    style: TextStyle(
-                      color: _textTienda,
-                      fontFamily: 'Helvetica Neue',
-                      fontWeight: _fontWeightTienda,
-                      fontSize: 16,
-                    )
-                ),
-              ],
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton (
-                  icon: _iconSaldo,
-                  onPressed: (){
-                    setState(() {
-                      _iconRetiro = _iconRetiroOff;
-                      _textRetiro = _textRetiroOff;
-                      _fontWeightRetiro = _fontOff;
-                      _iconTienda = _iconTiendaOff;
-                      _textTienda = _textTiendaOff;
-                      _fontWeightTienda = _fontOff;
-                      _iconSaldo = _iconSaldoOn;
-                      _textSaldo = _textSaldoOn;
-                      _fontWeightSaldo = _fontOn;
-                      _iconPerfil = _iconPerfilOff;
-                      _textPerfil = _textPerfilOff;
-                      _fontWeightPerfil = _fontOff;
-                    });
-                    print ('Paso por el click de Saldo');
-                    Navigator.pushReplacement(context, MaterialPageRoute(
-                      builder: (context) => Saldo(jwt, payload),
-                    ));
-                  },
-                  padding: EdgeInsets.all(0.0),
-                  constraints: BoxConstraints(maxWidth: 24.0, maxHeight: 20.0),
-                  alignment: Alignment.center,
-                ),
-                SizedBox(height: 2.0),
-                Text(
-                    'Saldo',
-                    style: TextStyle(
-                      color: _textSaldo,
-                      fontFamily: 'Helvetica Neue',
-                      fontWeight: _fontWeightTienda,
-                      fontSize: 16,
-                    )
-                ),
-              ],
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton (
-                  icon: _iconPerfil,
-                  onPressed: (){
-                    setState(() {
-                      _iconRetiro = _iconRetiroOff;
-                      _textRetiro = _textRetiroOff;
-                      _fontWeightRetiro = _fontOff;
-                      _iconTienda = _iconTiendaOff;
-                      _textTienda = _textTiendaOff;
-                      _fontWeightTienda = _fontOff;
-                      _iconSaldo = _iconSaldoOff;
-                      _textSaldo = _textSaldoOff;
-                      _fontWeightSaldo = _fontOff;
-                      _iconPerfil = _iconPerfilOn;
-                      _textPerfil = _textPerfilOn;
-                      _fontWeightPerfil = _fontOn;
-                    });
-                    print ('Paso por el click de Perfil');
-                    Navigator.pushReplacement(context, MaterialPageRoute(
-                      builder: (context) => Perfil(jwt, payload),
-                    ));
-                  },
-                  padding: EdgeInsets.only(bottom: 0.0),
-                  constraints: BoxConstraints(maxWidth: 22.0, maxHeight: 22.0),
-                  alignment: Alignment.center,
-                ),
-                SizedBox(height: 2.0),
-                Text(
-                    'Perfil',
-                    style: TextStyle(
-                      color: _textPerfil,
-                      fontFamily: 'Helvetica Neue',
-                      fontWeight: _fontWeightPerfil,
-                      fontSize: 16,
-                    )
-                ),
-              ],
-            )
-          ],
-        )
+                      )
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton (
+                    icon: _iconTienda,
+                    onPressed: () {
+                      setState(() {
+                        _iconRetiro = _iconRetiroOff;
+                        _textRetiro = _textRetiroOff;
+                        _fontWeightRetiro = _fontOff;
+                        _iconTienda = _iconTiendaOn;
+                        _textTienda = _textTiendaOn;
+                        _fontWeightTienda = _fontOn;
+                        _iconSaldo = _iconSaldoOff;
+                        _textSaldo = _textSaldoOff;
+                        _fontWeightSaldo = _fontOff;
+                        _iconPerfil = _iconPerfilOff;
+                        _textPerfil = _textPerfilOff;
+                        _fontWeightPerfil = _fontOff;
+                        print('Paso por el Click de Tienda');
+                        Navigator.pushReplacement(context, MaterialPageRoute(
+                          builder: (context) => Tienda(jwt, payload),
+                        ));
+                      });
+                    },
+                    padding: EdgeInsets.all(0.0),
+                    constraints: BoxConstraints(maxWidth: 29.0, maxHeight: 24.0),
+                    alignment: Alignment.center,
+                  ),
+                  SizedBox(height: 2.0),
+                  Text(
+                      'Tienda',
+                      style: TextStyle(
+                        color: _textTienda,
+                        fontFamily: 'Helvetica Neue',
+                        fontWeight: _fontWeightTienda,
+                        fontSize: 16,
+                      )
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton (
+                    icon: _iconSaldo,
+                    onPressed: (){
+                      setState(() {
+                        _iconRetiro = _iconRetiroOff;
+                        _textRetiro = _textRetiroOff;
+                        _fontWeightRetiro = _fontOff;
+                        _iconTienda = _iconTiendaOff;
+                        _textTienda = _textTiendaOff;
+                        _fontWeightTienda = _fontOff;
+                        _iconSaldo = _iconSaldoOn;
+                        _textSaldo = _textSaldoOn;
+                        _fontWeightSaldo = _fontOn;
+                        _iconPerfil = _iconPerfilOff;
+                        _textPerfil = _textPerfilOff;
+                        _fontWeightPerfil = _fontOff;
+                      });
+                      print ('Paso por el click de Saldo');
+                      Navigator.pushReplacement(context, MaterialPageRoute(
+                        builder: (context) => Saldo(jwt, payload),
+                      ));
+                    },
+                    padding: EdgeInsets.all(0.0),
+                    constraints: BoxConstraints(maxWidth: 24.0, maxHeight: 20.0),
+                    alignment: Alignment.center,
+                  ),
+                  SizedBox(height: 2.0),
+                  Text(
+                      'Saldo',
+                      style: TextStyle(
+                        color: _textSaldo,
+                        fontFamily: 'Helvetica Neue',
+                        fontWeight: _fontWeightTienda,
+                        fontSize: 16,
+                      )
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton (
+                    icon: _iconPerfil,
+                    onPressed: (){
+                      setState(() {
+                        _iconRetiro = _iconRetiroOff;
+                        _textRetiro = _textRetiroOff;
+                        _fontWeightRetiro = _fontOff;
+                        _iconTienda = _iconTiendaOff;
+                        _textTienda = _textTiendaOff;
+                        _fontWeightTienda = _fontOff;
+                        _iconSaldo = _iconSaldoOff;
+                        _textSaldo = _textSaldoOff;
+                        _fontWeightSaldo = _fontOff;
+                        _iconPerfil = _iconPerfilOn;
+                        _textPerfil = _textPerfilOn;
+                        _fontWeightPerfil = _fontOn;
+                      });
+                      print ('Paso por el click de Perfil');
+                      Navigator.pushReplacement(context, MaterialPageRoute(
+                        builder: (context) => Perfil(jwt, payload),
+                      ));
+                    },
+                    padding: EdgeInsets.only(bottom: 0.0),
+                    constraints: BoxConstraints(maxWidth: 22.0, maxHeight: 22.0),
+                    alignment: Alignment.center,
+                  ),
+                  SizedBox(height: 2.0),
+                  Text(
+                      'Perfil',
+                      style: TextStyle(
+                        color: _textPerfil,
+                        fontFamily: 'Helvetica Neue',
+                        fontWeight: _fontWeightPerfil,
+                        fontSize: 16,
+                      )
+                  ),
+                ],
+              )
+            ],
+          )
       ),
     );
   }
@@ -1251,7 +1397,7 @@ class _CustomAmountPermitedDetrayState extends State {
   final PleaseWaitBlueBackGroundWidget _pleaseWaitWidget =
   PleaseWaitBlueBackGroundWidget(key: ObjectKey("pleaseWaitBlueBackGroundWidget"));
   bool _pleaseWait = false;
-  int _rating = 200;
+  int _rating;
   TextEditingController _amountToDetray = TextEditingController();
   NumberFormat _f = new NumberFormat('#,###', 'en_US');
   bool _textFieldActivated = true;
@@ -1269,12 +1415,12 @@ class _CustomAmountPermitedDetrayState extends State {
   @override
   void initState() {
     super.initState();
-    _rating = 200;
+    amoutToDetray = this.puedesRetirar;
+    _rating = amoutToDetray < 200 ? amoutToDetray : 200;
     _amountToDetray.text = "0";
     _confirmaRetiro = false;
     _tecladoNumerico = true;
     expandFlag = false;
-    amoutToDetray = this.puedesRetirar;
   }
 
   @override
@@ -1300,49 +1446,163 @@ class _CustomAmountPermitedDetrayState extends State {
     currentFocus.unfocus();
     FocusScope.of(context).requestFocus(nextFocus);
   }
-  void _displayDialog (BuildContext context, String title, String banco, String cuenta, int cuota) => showDialog (
-    context: context,
-    builder: (context) =>
-        AlertDialog (
-          title: Text(
-            'Retiras: \$ ' + title,
-            textAlign: TextAlign.center
-          ),
-          content: _DetallesExtraccion(
-            banco: banco,
-            cuenta: cuenta,
-            cuota: cuota,
-          ),
-          actions: <Widget>[
-            FlatButton(
-              child: Text(
-                'Confirmar',
-              ),
-              onPressed: () {
-                setState(() {
-                  _confirmaRetiro = true;
-                });
-                Navigator.of(context).pop();
-              },
-              color: Colors.blue,
-            ),
-            FlatButton(
-              child: Text(
-                'Cancelar',
-              ),
-              onPressed: (){
-                setState(() {
-                  _confirmaRetiro = false;
-                });
-                Navigator.of(context).pop();
-              },
-              color: Colors.blue,
-            ),
-          ],
-          elevation: 24.0,
-        ),
-  );
+  Future<void> _displayDialog (BuildContext context, String title, String banco, String cuenta, int cuota) {
+    return showDialog<void>(
+        context: context,
+        builder: (context) {
+          return SimpleDialog (
+            titlePadding: EdgeInsets.zero,
+            title: Container(
+              padding: EdgeInsets.zero,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(0.0),
+                    width: 96.0,
+                    height: 96.0,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                    ),
+                    child: Image.asset(
+                        'assets/titleDialogBox.png'
+                        //'assets/Group8.png'
+                    ),
+                  ),
+                  SizedBox(height: 24.0,),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(int.parse(title)),
+                        style: TextStyle(
+                          fontFamily: 'Avenir',
+                          fontSize: 40.0,
+                          fontWeight: FontWeight.w900,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
 
+                    ],
+                  ),
+                  SizedBox(height: 24.0),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Los fondos están listos para ser',
+                        style: TextStyle(
+                          fontFamily: 'SF Pro Display',
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.normal,
+                          fontSize: 16,
+                        ),
+                        textAlign: TextAlign.center,
+                      )
+                    ],
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'enviados a tu cuenta',
+                        style: TextStyle(
+                          fontFamily: 'SF Pro Display',
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.normal,
+                          fontSize: 16,
+                        ),
+                        textAlign: TextAlign.center,
+                      )
+                    ],
+                  )
+                ],
+              ),
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+              side: BorderSide(
+
+              ),
+            ),
+            children: <Widget>[
+              _DetallesExtraccion(
+                banco: banco,
+                cuenta: cuenta,
+                cuota: cuota,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+                child: RaisedButton(
+                  padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+                  child: Container(
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration (
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(8.0),
+                        gradient: LinearGradient(
+                          colors: <Color>[
+                            Color (0xFFA007EB),
+                            Color (0XFF567DF4),
+                            Color (0xFF04FFFE)
+                          ],
+                        )
+                    ),
+                    //padding: const EdgeInsets.fromLTRB(145.0, 20.0, 145.0, 20.0),
+                    child: const Text(
+                        'Confirmar',
+                        style: TextStyle(
+                            fontSize: 24,
+                            color: Colors.white
+                        )
+                    ),
+                    height: 64,
+                  ),
+                  elevation: 8.0, // New
+                  onPressed: () async {
+                    setState(() {
+                      _confirmaRetiro = true;
+                    });
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+              SizedBox(height: 24.0),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                      child: GestureDetector(
+                        child: Text (
+                          'Cancelar',
+                          style: TextStyle(
+                            fontFamily: 'SF Pro Display',
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        onTap: (){
+                          setState(() {
+                            _confirmaRetiro = false;
+                          });
+                          Navigator.of(context).pop();
+                        },
+                      )
+                  ),
+                ],
+              ),
+              SizedBox(height: 24.0),
+            ],
+            elevation: 24.0,
+          );
+        }
+    );
+  }
   @override
   Widget build(BuildContext context) {
     final ThemeData _theme = Theme.of(context);
@@ -1383,9 +1643,6 @@ class _CustomAmountPermitedDetrayState extends State {
                       setState(() {
                         expandFlag = true;
                       });
-                      productAvailWidget.currentState.setState(() {
-                        productAvailWidget.currentState.expanded = false;
-                      });
                     },
                     //keyboardType: _tecladoNumerico ? TextInputType.number : TextInputType.emailAddress,
                     keyboardType: TextInputType.text,
@@ -1404,9 +1661,6 @@ class _CustomAmountPermitedDetrayState extends State {
                       } else {
                         setState(() {
                           expandFlag = !expandFlag;
-                        });
-                        productAvailWidget.currentState.setState(() {
-                          productAvailWidget.currentState.expanded = false;
                         });
                       }
                       //print('Después de llamar al _show');
@@ -1469,7 +1723,7 @@ class _CustomAmountPermitedDetrayState extends State {
                       child: Slider (
                         key: _sliderKey,
                         value: _rating.toDouble(),
-                        min: 200,
+                        min: amoutToDetray < 200 ? amoutToDetray.toDouble() : 200,
                         max: amoutToDetray.toDouble(),
                         activeColor: Color(0xFF4895F6),
                         inactiveColor: Color(0xFF9C9EB7),
@@ -1484,9 +1738,6 @@ class _CustomAmountPermitedDetrayState extends State {
                           setState(() {
                             _textFieldActivated = false;
                             _iconColor = secondaryTextColor;
-                          });
-                          productAvailWidget.currentState.setState(() {
-                            productAvailWidget.currentState.expanded = false;
                           });
                         },
                         semanticFormatterCallback: (double newValue) {
@@ -1620,10 +1871,14 @@ class _CustomAmountPermitedDetrayState extends State {
                               } else if (res.statusCode == 404) {
                                 _showPleaseWait(false);
                                 // Como retorno que le token no es valido retorno a la página de Login
-                                Navigator.pop(context);
+                                print('Me marcho por le que el Token esta caducado');
+                                //Navigator.pop(context);
+                                Navigator.pushNamed(context, '/login');
                                 //_showSnackBar(json.decode(res.body)['message'], error: false);
                               } else {
                                 _showPleaseWait(false);
+                                print('Me voy por el else de que no es ni 200 ni 404');
+                                print('Error:' + json.decode(res.body)['message']);
                                 _showSnackBar(json.decode(res.body)['message'], error: false);
                               }
                             }
@@ -1632,8 +1887,13 @@ class _CustomAmountPermitedDetrayState extends State {
                             _showSnackBar('El retiro no puede ser superior a ' + customListItemKey.currentState.puedesRetirar.toString() + '.', error: false);
                           }
                         } else {
-                          _showPleaseWait(false);
-                          _showSnackBar('El retiro ha de ser superior a 0.', error: false);
+                          if (puedesRetirar > 0) {
+                            _showPleaseWait(false);
+                            _showSnackBar('El retiro ha de ser superior a 0.', error: false);
+                          } else {
+                            _showPleaseWait(false);
+                            _showSnackBar('Nos encontramos en período de ajuste de nómina. En breve podrá usted retirar de nuevo.', error: false);
+                          }
                         }
                       } catch (e) {
                         _showPleaseWait(false);
@@ -1688,27 +1948,31 @@ class _CustomListItem extends StatefulWidget {
   _CustomListItem({
     Key key,
     this.user,
+    this.empresa,
     this.saldoAcumulado,
     this.puedesRetirar,
     this.diasAlaNomina,
   }): super (key: key);
   final String user;
+  final String empresa;
   final int saldoAcumulado;
   int puedesRetirar;
   final int diasAlaNomina;
   @override
   _CustomListItemState createState(){
-    return _CustomListItemState (user, saldoAcumulado, puedesRetirar, diasAlaNomina);
+    return _CustomListItemState (user, empresa, saldoAcumulado, puedesRetirar, diasAlaNomina);
   }
 }
 class _CustomListItemState extends State {
   _CustomListItemState(
     this.user,
+    this.empresa,
     this.saldoAcumulado,
     this.puedesRetirar,
     this.diasAlaNomina
   );
   final String user;
+  final String empresa;
   final int saldoAcumulado;
   int puedesRetirar;
   final int diasAlaNomina;
@@ -1723,10 +1987,12 @@ class _CustomListItemState extends State {
                 borderRadius: BorderRadius.circular(4.0),
                 gradient: LinearGradient(
                     colors: <Color>[
-                      //Color (0xFFA007EB),
+                      Color (0xFFA007EB),
                       //Color (0XFF567DF4),
                       //Color (0xFF04FFFE)
-                      Color (0xFFAD87EF),
+
+
+                      //Color (0xFFAD87EF),
                       Color (0xFF7D3EEF),
                       Color (0xFF5F6FF3),
                       Color (0xFF3FA2F7),
@@ -1762,7 +2028,7 @@ class _CustomListItemState extends State {
                     Padding(
                       padding: const EdgeInsets.only(left: 16.0),
                       child: Text (
-                        'Nombre de la empresa',
+                        empresa,
                         style: const TextStyle(
                           fontSize: 12.0,
                           color: Colors.white,
@@ -2057,82 +2323,128 @@ class _DetallesExtraccion extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 1200,
+    return Container(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.account_balance,
-                      color: Colors.black,
-                    ),
-                    onPressed: null,
-                  )
-              ),
-              Expanded(
-                  child: Text(
-                      'Banco'
-                  )
-              ),
-              Expanded(
+          const Divider(
+            color: Color(0xFFD8D9E3),
+            //height: 20,
+            thickness: 1,
+            indent: 0,
+            endIndent: 0,
+          ),
+          Padding(
+            padding: EdgeInsets.only(left: 24.0, right: 24.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                IconButton(
+                  icon: Image.asset('assets/dialogBanco.png')
+                ),
+                Text(
+                  'Banco',
+                  style: TextStyle(
+                    fontFamily: 'Helvetica Neue',
+                    fontSize: 16,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+                Expanded(
                   flex: 2,
                   child: Text(
                     banco,
-                  ),
-              ),
-            ],
-          ),
-          Row(
-            children: <Widget>[
-              Expanded(
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.closed_caption,
-                      color: Colors.black,
+                    style: TextStyle(
+                      fontFamily: 'Helvetica Neue',
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
-                    onPressed: null,
-                  )
-              ),
-              Expanded(
-                  child: Text(
-                      'Cuenta'
-                  )
-              ),
-              Expanded(
+                    textAlign: TextAlign.right,
+                  ),
+                )
+              ],
+            ),
+          ),
+          const Divider(
+            color: Color(0xFFD8D9E3),
+            //height: 20,
+            thickness: 1,
+            indent: 0,
+            endIndent: 0,
+          ),
+          Padding(
+            padding: EdgeInsets.only(left: 24.0, right: 24.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                IconButton(
+                  icon: Image.asset('assets/dialogCuenta.png'),
+                  //color: Color(0xFFADB0C7),
+                ),
+                Text(
+                  'Cuenta',
+                  style: TextStyle(
+                    fontFamily: 'Helvetica Neue',
+                    fontSize: 16,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+                Expanded(
                   flex: 2,
                   child: Text(
-                    cuenta,
-                  )
-              ),
-            ],
-          ),
-          Row(
-            children: <Widget>[
-              Expanded(
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.loop,
-                      color: Colors.black,
+                    '**** **** **** **' + cuenta.substring(cuenta.length - 4),
+                    //cuenta,
+                    style: TextStyle(
+                      fontFamily: 'Helvetica Neue',
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
-                    onPressed: null,
-                  )
-              ),
-              Expanded(
-                  child: Text(
-                      'Cuota'
-                  )
-              ),
-              Expanded(
+                    textAlign: TextAlign.right,
+                  ),
+                )
+              ],
+            ),
+          ),
+          const Divider(
+            color: Color(0xFFD8D9E3),
+            //height: 20,
+            thickness: 1,
+            indent: 0,
+            endIndent: 0,
+          ),
+          Padding(
+            padding: EdgeInsets.only(left: 24.0, right: 24.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                IconButton(
+                  icon: Image.asset('assets/dialogCuota.png')
+                ),
+                Text(
+                  'Cuota',
+                  style: TextStyle(
+                    fontFamily: 'Helvetica Neue',
+                    fontSize: 16,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+                Expanded(
                   flex: 2,
                   child: Text(
                     cuota == 0 ? 'GRATUITA' : new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(cuota),
-                  )
-              ),
-            ],
-          )
+                    style: TextStyle(
+                      fontFamily: 'Helvetica Neue',
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.right,
+                  ),
+                )
+              ],
+            ),
+          ),
+          SizedBox(height: 40.0),
         ],
       ),
     );
