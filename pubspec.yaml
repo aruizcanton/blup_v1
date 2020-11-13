@@ -24,6 +24,14 @@ dependencies:
   cupertino_icons: ^0.1.2
   http: ^0.12.1
   flutter_secure_storage: ^3.3.3
+  intl: ^0.16.1
+  flutter_xlider: ^3.4.0
+  keyboard_actions: ^3.2.1+1
+  redux: ^4.0.0
+  flutter_redux: ^0.6.0
+  cached_network_image: ^2.2.0+1
+  provider: ^4.3.2+1
+  qr_flutter: ^3.2.0
 
 dev_dependencies:
   flutter_test:
@@ -48,7 +56,41 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/outline_monetization_on_black_48.png
+    - assets/KlincLogo.png
+    - assets/KlincLogoAppBar.png
+    - assets/retiroOnBottonNavBar.png
+    - assets/retiroOffBottonNavBar.png
+    - assets/tiendaOnBottonNavBar.png
+    - assets/tiendaOffBottonNavBar.png
+    - assets/saldoOnBottonNavBar.png
+    - assets/saldoOffBottonNavBar.png
+    - assets/perfilOnBottonNavBar.png
+    - assets/perfilOffBottonNavBar.png
+    - assets/titleDialogBox.png
+    - assets/dialogBanco.png
+    - assets/dialogCuenta.png
+    - assets/dialogCuota.png
+    - assets/perfilNombreUsuario.png
+    - assets/perfilCorreo.png
+    - assets/perfilNombreEmpresa.png
+    - assets/perfilEsquemaPago.png
+    - assets/perfilSueldoMensual.png
+    - assets/perfilBanco.png
+    - assets/perfilCuenta.png
+    - assets/menuAppBar.png
+    - assets/campanaAppBar.png
+    - assets/detalleSaldoFactura.png
+    - assets/tiendaBolsaCaudal.png
+    - assets/flecha-izquierda.png
+    - assets/compraProductoBolsaCaudal.png
+    - assets/KlinkLogoDrawMenu.png
+    - assets/candadoDrawer.png
+    - assets/soporteDrawer.png
+    - assets/preguntasFreqDrawer.png
+    - assets/terminosYCondiDrawer.png
+    - assets/ganaRetirosDrawer.png
+    - assets/dinero.png
+    - assets/notificacionKlincLogo.png
   #  - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -1,28 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
-import 'dart:async';
-import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'dart:async';
 
-import 'home.dart';
-import 'colors.dart';
-import 'utils/util.dart';
-import 'package:blupv1/bloc/cartProductsBloc.dart';
-
+import 'package:blupv1/colors.dart';
+import 'package:blupv1/utils/util.dart';
+import 'package:blupv1/home.dart';
 
 final storage = FlutterSecureStorage();
 
-class validateRegistryPage extends StatefulWidget {
+class CambioContrasenya extends StatefulWidget {
   final String user_name;
-  validateRegistryPage(this.user_name);
+  CambioContrasenya(this.user_name);
   @override
-  _validateRegistryPageState createState() => _validateRegistryPageState(this.user_name);
+  _CambioContrasenyaState createState() => _CambioContrasenyaState(this.user_name);
 }
-class _validateRegistryPageState extends State<validateRegistryPage> {
+class _CambioContrasenyaState extends State<CambioContrasenya> {
   // TODO: Add text editing controllers (101)
-  _validateRegistryPageState(this.user_name);
+  _CambioContrasenyaState(this.user_name);
   final String user_name;
 
   final TextEditingController _pinController = TextEditingController();
@@ -83,7 +79,7 @@ class _validateRegistryPageState extends State<validateRegistryPage> {
       print ('El user_name es: ' + user_name);
       print ('La password es: ' + password);
       print ('El pin es: ' + pin);
-      final http.Response res = await http.post("$SERVER_IP/validacion",
+      final http.Response res = await http.post("$SERVER_IP/cambioPassword",
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8'
           },
@@ -124,23 +120,16 @@ class _validateRegistryPageState extends State<validateRegistryPage> {
   Widget build(BuildContext context) {
     Widget builder = SafeArea(
       child: ListView(
-        padding: EdgeInsets.symmetric(horizontal: 24.0),
+        padding: EdgeInsets.symmetric(horizontal: 47.0),
         children: <Widget>[
-          SizedBox(height: 80.0),
-          Column(
-            children: <Widget>[
-              Image.asset('assets/KlincLogo.png'),
-              SizedBox(height: 32.0),
-              Text(
-                'Valida tu registro',
-                style: Theme.of(context).textTheme.headline1,
-              ),
-            ],
-          ),
-          SizedBox(height: 32.0),
+          SizedBox(height: 48.0),
           Text(
-              'Código invitación enviado a tu correo:',
-              style: Theme.of(context).textTheme.caption,
+              'Introduce tu PIN :',
+              style: const TextStyle(
+                fontFamily: 'Helvetica Neue',
+                fontSize: 16.0,
+                fontWeight: FontWeight.normal
+              ),
           ),
           SizedBox(height: 4.0),
           AccentColorOverride(
@@ -148,26 +137,27 @@ class _validateRegistryPageState extends State<validateRegistryPage> {
             child: TextField(
               controller: _pinController,
               decoration: InputDecoration(
-                labelText: '6 dígitos',
-                suffixIcon: IconButton(
-                    icon: Icon(_pinNoVisible ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () {
-                      setState(() {
-                        _pinNoVisible = ! _pinNoVisible;
-                      });
-                    }
-                )
+                  labelText: '4 dígitos',
+                  suffixIcon: IconButton(
+                      icon: Icon(_pinNoVisible ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () {
+                        setState(() {
+                          _pinNoVisible = ! _pinNoVisible;
+                        });
+                      }
+                  )
               ),
               obscureText: _pinNoVisible,
             ),
           ),
           SizedBox(height: 24.0),
-          // [Password]
           Text(
-              'Contraseña:',
+              'Nueva contraseña:',
               style: const TextStyle(
-                fontWeight: FontWeight.w500,
-              )
+                  fontFamily: 'Helvetica Neue',
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.normal
+              ),
           ),
           SizedBox(height: 4.0),
           AccentColorOverride(
@@ -192,10 +182,12 @@ class _validateRegistryPageState extends State<validateRegistryPage> {
           ),
           SizedBox(height: 24.0),
           Text(
-              'Repite la contraseña:',
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-              )
+            'Confirmar nueva contraseña:',
+            style: const TextStyle(
+                fontFamily: 'Helvetica Neue',
+                fontSize: 16.0,
+                fontWeight: FontWeight.normal
+            ),
           ),
           SizedBox(height: 4.0),
           AccentColorOverride(
@@ -218,33 +210,34 @@ class _validateRegistryPageState extends State<validateRegistryPage> {
               obscureText: _confirmaPassNoVisible,
             ),
           ),
-          SizedBox(height: 72.0),
-          RaisedButton(
+          SizedBox(height: 40.0),
+          Text(
+            'Recuerda que tu contraseña ha de tener al menos 6 caracteres.',
+            style: TextStyle(
+              fontSize: 16,
+              fontFamily: 'Helvetica Neue',
+              fontWeight: FontWeight.w200,
+            ),
+          ),
+          SizedBox(height: 40.0),
+          FlatButton(
             padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
             child: Container(
               alignment: Alignment.center,
               decoration: BoxDecoration (
-                  shape: BoxShape.rectangle,
-                  borderRadius: BorderRadius.circular(8.0),
-                  gradient: LinearGradient(
-                    colors: <Color>[
-                      Color (0xFFA007EB),
-                      Color (0XFF567DF4),
-                      Color (0xFF04FFFE)
-                    ],
-                  )
+                shape: BoxShape.rectangle,
+                borderRadius: BorderRadius.circular(8.0),
+                color: Color(0xFFADB0C7),
               ),
-              //padding: const EdgeInsets.fromLTRB(145.0, 20.0, 145.0, 20.0),
               child: const Text(
-                  'Empezar ahora',
-                  style: TextStyle(
-                      fontSize: 24,
-                      color: Colors.white
-                  )
+                'Cambiar contraseña',
+                style: TextStyle(
+                    fontSize: 24,
+                    color: Colors.white
+                ),
               ),
               height: 64,
             ),
-            elevation: 8.0, // New code
             onPressed: () async {
               var pin = _pinController.text;
               var password = _passwordController.text;
@@ -256,43 +249,11 @@ class _validateRegistryPageState extends State<validateRegistryPage> {
                 print (jwt);
 //                    if (jwt != null) {
                 if (jwt['code'] == 200) {
-                  storage.delete(key: "jwt");
                   storage.write(key: "jwt", value: jwt["token"]);
-                  // Meto los productos para vender en el almacen
-                  Map<String, dynamic> otroPayload;
-                  otroPayload = json.decode(
-                      utf8.decode(
-                          base64.decode(base64.normalize(jwt['token'].split(".")[1]))
-                      )
-                  );
-                  // Gravo en el espacio local la cantidad máxima que puedo retirar
-                  print('Antes de escribir en el Storage el valor de max_permitido. Su valor es: ' + otroPayload['max_permitido'].toString());
-                  storage.delete(key: "max_permitido");
-                  storage.write(key: "max_permitido", value: otroPayload['max_permitido'].toString());
-                  print('Escrito el valor de max_permitido');
-                  var max_permitido = await storage.read(key: "max_permitido");
-                  print('Leído de nuevo el valor de max_permitido: ' + max_permitido);
-                  // Fin grabacion
-                  var temp =  new List<Map<String, dynamic>>();
-                  for (var i = 0; i< otroPayload['productsAvail'].length; i++) {
-                    temp.add({
-                      'product_id': otroPayload['productsAvail'][i]['PRODUCT_ID'],
-                      'product_name': otroPayload['productsAvail'][i]['PRODUCT_NAME'],
-                      'image': otroPayload['productsAvail'][i]['IMAGE'],
-                      'avail': otroPayload['productsAvail'][i]['AVAIL'],
-                      'product_price': otroPayload['productsAvail'][i]['PRODUCT_PRICE'],
-                      'comission': otroPayload['productsAvail'][i]['COMISSION']
-                    });
-                    print ('Entro en el bucle');
-                  };
-                  print ('Después de cargar bloc');
-                  bloc.removeAllFromCart();
-                  bloc.set(temp);
-                  for(var i= 0; i < bloc.allItems['shopItems'].length; i++) {
-                    print (bloc.allItems['shopItems'][i]);
-                  }
-                  print ('Justo después de imprimir los elementos del almacen');
-                  Navigator.push(
+                  //Navigator.pop(context);
+                  //Navigator.pop(context);
+                  //Navigator.pop(context);
+                  Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (context) => HomePage.fromBase64(jwt['token']))
                   );
@@ -303,31 +264,9 @@ class _validateRegistryPageState extends State<validateRegistryPage> {
               } else {
                 _showSnackBar('La contraseña y su confirmación deben ser idénticas', error: false);
               }
+              // TODO: Show the next page (101)
             },
           ),
-          SizedBox(height: 120.0),
-          Center(
-            child: Text(
-              '¿Ya tienes una cuenta?',
-              style: Theme.of(context).textTheme.caption,
-            ),
-          ),
-          Center(
-            child: Text.rich(
-              TextSpan(
-                  text: 'Entrar aquí',
-                  style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0XFF4895F6),
-                      decoration: TextDecoration.underline
-                  ),
-                  recognizer: new TapGestureRecognizer()
-                    ..onTap = () {
-                      Navigator.pop(context);
-                    }
-              ),
-            ),
-          )
         ],
       ),
     );
@@ -335,12 +274,45 @@ class _validateRegistryPageState extends State<validateRegistryPage> {
         ? Stack(key: ObjectKey("stack"), children: [_pleaseWaitWidget, builder])
         : Stack(key: ObjectKey("stack"), children: [builder]);
 
-    return Scaffold(
-      key: _scaffoldKey,
-      body: bodyWidget
+    return Scaffold (
+        key: _scaffoldKey,
+        body: bodyWidget,
+        appBar: AppBar(
+          elevation: 0.0,
+          leading: Builder (
+              builder: (BuildContext context){
+                return Container(
+                  alignment: Alignment.centerRight,
+                  padding: EdgeInsets.only(left: 32.0),
+                  child: IconButton(
+                    padding: EdgeInsets.all(0.0),
+                    color: Colors.black,
+                    icon: Image.asset('assets/flecha-izquierda.png'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                  ),
+                );
+              }
+          ),
+          title: Text(
+            'Cambiar contraseña',
+            style: TextStyle(
+              fontFamily: 'SF Pro Display',
+              fontStyle: FontStyle.normal,
+              fontWeight: FontWeight.w500,
+              fontSize: 16,
+            ),
+            textAlign: TextAlign.left,
+          ),
+          backgroundColor: colorCajasTexto,
+          brightness: Brightness.light,
+        ),
     );
   }
 }
+
 class _Token {
   final String token;
 

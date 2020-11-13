@@ -24,6 +24,7 @@ import 'package:blupv1/detalleSaldoHistorico.dart';
 import 'package:blupv1/tienda.dart';
 import 'package:blupv1/cambioContraseña.dart';
 import 'package:blupv1/cambioPIN.dart';
+import 'package:blupv1/notificaciones.dart';
 
 class Saldo extends StatefulWidget {
   Saldo(this.jwt, this.payload);
@@ -917,7 +918,8 @@ class SaldoState extends State<Saldo> with SingleTickerProviderStateMixin {
         return saldoActual;
       } else if (res.statusCode == 404) {
         print ('Paso por el token caducado');
-        Navigator.pushNamed(context, '/login');
+        //Navigator.pushNamed(context, '/login');
+        Navigator.pushReplacementNamed(context, '/login');
         //throw Exception('Token caducado.');
       } else {
         throw Exception(res.statusCode.toString() + ": " + json.decode(res.body)['message'].toString());
@@ -1007,6 +1009,9 @@ class SaldoState extends State<Saldo> with SingleTickerProviderStateMixin {
               color: Colors.black,
               onPressed: () {
                 print('Filter button');
+                Navigator.push(context, MaterialPageRoute(
+                  builder: (context) => Notificaciones(jwt, payload), // 1 porque lo llamo desde la tab de histórico
+                ));
               },
             ),
           ),
@@ -1042,142 +1047,236 @@ class SaldoState extends State<Saldo> with SingleTickerProviderStateMixin {
           } catch(e){
             _showSnackBar(snapshot.error.toString(), error: false);
             //Navigator.pop(context);
-            Navigator.pushNamed(context, '/login');
+            //Navigator.pushNamed(context, '/login');
+            Navigator.pushReplacementNamed(context, '/login');
           }
         },
       ),
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            Container(
-              height: 80.0,
-              child:DrawerHeader(
-                  margin: EdgeInsets.all(0.0),
-                  padding: EdgeInsets.all(0.0),
-                  child: Container(
-                    //padding: EdgeInsets.fromLTRB(0.0, 4.0, 0.0, 4.0),
-                    //height: 48.0,
-                    child: Image.asset('assets/KlinkLogoDrawMenu.png'),
+        child: LayoutBuilder(
+            builder: (context, constraints) {
+              const int constanteAltoPantalla = 540;  // Siempre determino esta altura que hay que eliminar del menu para que la opcion quede a la altura adecuada
+              print ('El alto de la pantalla es: ' + constraints.minHeight.toString());
+              double posicionOpcionCerrarSesion = constraints.minHeight - (constanteAltoPantalla) - 72; //El ancho de cada opción del menú es de 72 puntos. 540
+              return ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                  Container(
+                    height: 103.0,
+                    child:DrawerHeader(
+                        margin: EdgeInsets.all(0.0),
+                        padding: EdgeInsets.only(bottom: 10),
+                        child: Container(
+                          //padding: EdgeInsets.fromLTRB(0.0, 4.0, 0.0, 4.0),
+                          //height: 48.0,
+                          child: Image.asset('assets/KlinkLogoDrawMenu.png'),
+                        )
+                    ),
+                  ),
+                  Container(
+                    alignment: Alignment(0.0, 0.0),
+                    height: 72,
+                    decoration: BoxDecoration(
+                      border: Border(
+                          bottom: BorderSide(color: Color(0xFFD8D8D8))
+                      ),
+                    ),
+                    child: ListTile(
+                        leading: Image.asset('assets/perfilNombreUsuario.png'),
+                        title: Text(
+                          'Perfil',
+                          style: TextStyle(
+                              fontFamily: 'Helvetica Neue',
+                              fontSize: 16,
+                              fontStyle: FontStyle.normal,
+                              fontWeight: FontWeight.normal
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement (
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => Perfil(jwt, payload),
+                              )
+                          );
+                        }
+                    ),
+                  ),
+                  Container(
+                    alignment: Alignment(0.0, 0.0),
+                    height: 72,
+                    decoration: BoxDecoration(
+                      border: Border(
+                          bottom: BorderSide(color: Color(0xFFD8D8D8))
+                      ),
+                    ),
+                    child: ListTile(
+                        leading: Image.asset('assets/candadoDrawer.png'),
+                        title: Text(
+                          'Cambio contraseña',
+                          style: TextStyle(
+                              fontFamily: 'Helvetica Neue',
+                              fontSize: 16,
+                              fontStyle: FontStyle.normal,
+                              fontWeight: FontWeight.normal
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.push (
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CambioContrasenya(payload['email']),
+                              )
+                          );
+                        }
+                    ),
+                  ),
+                  Container(
+                    alignment: Alignment(0.0, 0.0),
+                    height: 72,
+                    decoration: BoxDecoration(
+                      border: Border(
+                          bottom: BorderSide(color: Color(0xFFD8D8D8))
+                      ),
+                    ),
+                    child: ListTile(
+                        leading: Image.asset('assets/candadoDrawer.png'),
+                        title: Text(
+                          'Cambio PIN',
+                          style: TextStyle(
+                              fontFamily: 'Helvetica Neue',
+                              fontSize: 16,
+                              fontStyle: FontStyle.normal,
+                              fontWeight: FontWeight.normal
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.push (
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CambioPin(payload['email']),
+                              )
+                          );
+                        }
+                    ),
+                  ),
+                  Container(
+                    alignment: Alignment(0.0, 0.0),
+                    height: 72,
+                    decoration: BoxDecoration(
+                      border: Border(
+                          bottom: BorderSide(color: Color(0xFFD8D8D8))
+                      ),
+                    ),
+                    child: ListTile(
+                      leading: Image.asset('assets/soporteDrawer.png'),
+                      title: Text(
+                        'Soporte',
+                        style: TextStyle(
+                            fontFamily: 'Helvetica Neue',
+                            fontSize: 16,
+                            fontStyle: FontStyle.normal,
+                            fontWeight: FontWeight.normal
+                        ),
+                      ),
+                    ),
+                  ),
+                  //ListTile(
+                  //  leading: Image.asset('assets/ganaRetirosDrawer.png'),
+                  //  title: Text(
+                  //    'Gana Retiros',
+                  //    style: TextStyle(
+                  //        fontFamily: 'Helvetica Neue',
+                  //        fontSize: 16,
+                  //        fontStyle: FontStyle.normal,
+                  //        fontWeight: FontWeight.normal
+                  //    ),
+                  //  ),
+                  //  shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
+                  //),
+                  Container (
+                    alignment: Alignment(0.0, 0.0),
+                    height: 72,
+                    decoration: BoxDecoration(
+                      border: Border(
+                          bottom: BorderSide(color: Color(0xFFD8D8D8))
+                      ),
+                    ),
+                    child: ListTile(
+                      leading: Image.asset('assets/preguntasFreqDrawer.png'),
+                      title: Text(
+                        'Preguntas frecuentes',
+                        style: TextStyle(
+                            fontFamily: 'Helvetica Neue',
+                            fontSize: 16,
+                            fontStyle: FontStyle.normal,
+                            fontWeight: FontWeight.normal
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container (
+                    alignment: Alignment(0.0, 0.0),
+                    height: 72,
+                    decoration: BoxDecoration(
+                      border: Border(
+                          bottom: BorderSide(color: Color(0xFFD8D8D8))
+                      ),
+                    ),
+                    child: ListTile(
+                      leading: Image.asset(
+                        'assets/terminosYCondiDrawer.png',
+                        fit: BoxFit.cover,
+                      ),
+                      title: Text(
+                        'Términos y condiciones',
+                        style: TextStyle(
+                            fontFamily: 'Helvetica Neue',
+                            fontSize: 16,
+                            fontStyle: FontStyle.normal,
+                            fontWeight: FontWeight.normal
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: posicionOpcionCerrarSesion,
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        height: 72.0,
+                        alignment: Alignment(0.0, 0.0),
+                        decoration: BoxDecoration(
+                          border: Border(
+                              top: BorderSide(color: Color(0xFFD8D8D8))
+                          ),
+                        ),
+                        child: ListTile(
+                          //leading: Image.asset('assets/terminosYCondiDrawer.png'),
+                            contentPadding: EdgeInsets.fromLTRB(80.0, 0, 0, 0),
+                            title: Text(
+                              'Cerrar sesión',
+                              style: TextStyle(
+                                fontFamily: 'Helvetica Neue',
+                                fontSize: 16.0,
+                                fontStyle: FontStyle.normal,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFFE81D5E),
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.pushReplacementNamed(context, '/login');
+                            }
+                        ),
+                      ),
+                    ],
                   )
-              ),
-            ),
-            ListTile(
-                leading: Image.asset('assets/perfilNombreUsuario.png'),
-                title: Text(
-                  'Perfil',
-                  style: TextStyle(
-                      fontFamily: 'Helvetica Neue',
-                      fontSize: 16,
-                      fontStyle: FontStyle.normal,
-                      fontWeight: FontWeight.normal
-                  ),
-                ),
-                shape: Border(bottom: BorderSide(color: Color(0xFFD8D9E3))),
-                onTap: () {
-                  Navigator.pushReplacement (
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Perfil(jwt, payload),
-                      )
-                  );
-                }
-            ),
-            ListTile(
-                leading: Image.asset('assets/candadoDrawer.png'),
-                title: Text(
-                  'Cambio contraseña',
-                  style: TextStyle(
-                      fontFamily: 'Helvetica Neue',
-                      fontSize: 16,
-                      fontStyle: FontStyle.normal,
-                      fontWeight: FontWeight.normal
-                  ),
-                ),
-                shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
-                onTap: () {
-                  Navigator.push (
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CambioContrasenya(payload['email']),
-                      )
-                  );
-                }
-            ),
-            ListTile(
-                leading: Image.asset('assets/candadoDrawer.png'),
-                title: Text(
-                  'Cambio PIN',
-                  style: TextStyle(
-                      fontFamily: 'Helvetica Neue',
-                      fontSize: 16,
-                      fontStyle: FontStyle.normal,
-                      fontWeight: FontWeight.normal
-                  ),
-                ),
-                shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
-                onTap: () {
-                  Navigator.push (
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CambioPin(payload['email']),
-                      )
-                  );
-                }
-            ),
-            ListTile(
-              leading: Image.asset('assets/soporteDrawer.png'),
-              title: Text(
-                'Soporte',
-                style: TextStyle(
-                    fontFamily: 'Helvetica Neue',
-                    fontSize: 16,
-                    fontStyle: FontStyle.normal,
-                    fontWeight: FontWeight.normal
-                ),
-              ),
-              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
-            ),
-            // ListTile(
-            //   leading: Image.asset('assets/ganaRetirosDrawer.png'),
-            //   title: Text(
-            //     'Gana Retiros',
-            //     style: TextStyle(
-            //         fontFamily: 'Helvetica Neue',
-            //         fontSize: 16,
-            //         fontStyle: FontStyle.normal,
-            //         fontWeight: FontWeight.normal
-            //     ),
-            //   ),
-            //   shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
-            // ),
-            ListTile(
-              leading: Image.asset('assets/preguntasFreqDrawer.png'),
-              title: Text(
-                'Preguntas frecuentes',
-                style: TextStyle(
-                    fontFamily: 'Helvetica Neue',
-                    fontSize: 16,
-                    fontStyle: FontStyle.normal,
-                    fontWeight: FontWeight.normal
-                ),
-              ),
-              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
-            ),
-            ListTile(
-              leading: Image.asset('assets/terminosYCondiDrawer.png'),
-              title: Text(
-                'Términos y condiciones',
-                style: TextStyle(
-                    fontFamily: 'Helvetica Neue',
-                    fontSize: 16,
-                    fontStyle: FontStyle.normal,
-                    fontWeight: FontWeight.normal
-                ),
-              ),
-              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
-            )
-          ],
+                ],
+              );
+            }
         ),
       ),
       bottomNavigationBar: _BottonNavigationBar(jwt: jwt, payload: payload),
@@ -1419,149 +1518,5 @@ class _BottonNavigationBarState extends State<_BottonNavigationBar>{
           )
       ),
     );
-  }
-}
-class _CartList extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    // This gets the current state of SaldoHistoDetalleList and also tells Flutter
-    // to rebuild this widget when SaldoHistoDetalleList notifies listeners (in other words,
-    // when it changes).
-    var saldoHistoDetalleList = context.watch<SaldoHistoDetalleList>();
-    if (saldoHistoDetalleList.numElements == 0) {
-      //No existe historico
-      return ListView(
-        children: [
-          Center(
-            child: Text(
-              'No existen elementos.',
-              style: TextStyle(
-                fontSize: 16,
-              ),
-            ),
-
-          )
-        ],
-      );
-    } else {
-      return ListView.builder(
-          itemCount: saldoHistoDetalleList.numElements,
-          itemBuilder: (BuildContext context, int index){
-            var mysaldoHistoDetalleList = saldoHistoDetalleList.items;
-            return Card(
-              color: Colors.white,
-              child: ListTile(
-                leading: Column(
-                  children: [
-                    Text(
-                      DateFormat('dd', 'es_MX').format(mysaldoHistoDetalleList[index].create_date),
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 20,
-                      ),
-                    ),
-                    Text(
-                      DateFormat('MMM', 'es_MX').format(mysaldoHistoDetalleList[index].create_date),
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 15,
-                      ),
-                    ),
-                    Text(
-                      DateFormat('HH:mm', 'es_MX').format(mysaldoHistoDetalleList[index].create_date),
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-                title: Text(
-                  mysaldoHistoDetalleList[index].description,
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 19,
-                  ),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                          text: 'Folio: ',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
-                          ),
-                          children: <TextSpan>[
-                            TextSpan(
-                                text: mysaldoHistoDetalleList[index].transaction_id.toString(),
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold
-                                )
-                            ),
-                          ]
-                      ),
-                    ),
-                    RichText(
-                      text: TextSpan(
-                          text: 'Vigencia: ',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
-                          ),
-                          children: <TextSpan>[
-                            TextSpan(
-                                text: DateFormat('dd/MM/yy', 'es_MX').format(mysaldoHistoDetalleList[index].exp_date),
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                )
-                            )
-                          ]
-                      ),
-                    )
-                  ],
-                ),
-                trailing: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(mysaldoHistoDetalleList[index].extracted_amount),
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 20,
-                      ),
-                    ),
-                    Text(
-                      'Cuota: ' + NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(mysaldoHistoDetalleList[index].comission_amount),
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 12,
-                      ),
-                    ),
-                    Text(
-                      mysaldoHistoDetalleList[index].tipo,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 12,
-                      ),
-                    )
-                  ],
-                ),
-              ),
-            );
-          }
-      );
-    }
   }
 }

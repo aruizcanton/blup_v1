@@ -7,6 +7,7 @@ import 'package:blupv1/colors.dart';
 import 'package:blupv1/home.dart';
 import 'package:blupv1/cambioContraseña.dart';
 import 'package:blupv1/cambioPIN.dart';
+import 'package:blupv1/notificaciones.dart';
 
 class Perfil extends StatefulWidget {
   Perfil(this.jwt, this.payload);
@@ -38,7 +39,7 @@ class PerfilState extends State {
   }
   String _DateTimeFormatted() {
     final DateTime now = DateTime.now();
-    final DateFormat formatter = DateFormat('dd MMMM yyyy');
+    final DateFormat formatter = DateFormat('dd MMMM yyyy', 'es-MX');
     final String formatted = formatter.format(now);
     return (formatted); // something like 2013-04-20
   }
@@ -604,6 +605,9 @@ class PerfilState extends State {
               color: Colors.black,
               onPressed: () {
                 print('Filter button');
+                Navigator.push(context, MaterialPageRoute(
+                  builder: (context) => Notificaciones(jwt, payload), // 1 porque lo llamo desde la tab de histórico
+                ));
               },
             ),
           ),
@@ -611,137 +615,230 @@ class PerfilState extends State {
       ),
       body: _BodyWidgets(context),
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            Container(
-              height: 80.0,
-              child:DrawerHeader(
-                  margin: EdgeInsets.all(0.0),
-                  padding: EdgeInsets.all(0.0),
-                  child: Container(
-                    //padding: EdgeInsets.fromLTRB(0.0, 4.0, 0.0, 4.0),
-                    //height: 48.0,
-                    child: Image.asset('assets/KlinkLogoDrawMenu.png'),
+        child: LayoutBuilder(
+            builder: (context, constraints) {
+              const int constanteAltoPantalla = 540;  // Siempre determino esta altura que hay que eliminar del menu para que la opcion quede a la altura adecuada
+              print ('El alto de la pantalla es: ' + constraints.minHeight.toString());
+              double posicionOpcionCerrarSesion = constraints.minHeight - (constanteAltoPantalla) - 72; //El ancho de cada opción del menú es de 72 puntos. 540
+              return ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                  Container(
+                    height: 103.0,
+                    child:DrawerHeader(
+                        margin: EdgeInsets.all(0.0),
+                        padding: EdgeInsets.only(bottom: 10),
+                        child: Container(
+                          //padding: EdgeInsets.fromLTRB(0.0, 4.0, 0.0, 4.0),
+                          //height: 48.0,
+                          child: Image.asset('assets/KlinkLogoDrawMenu.png'),
+                        )
+                    ),
+                  ),
+                  Container(
+                    alignment: Alignment(0.0, 0.0),
+                    height: 72,
+                    decoration: BoxDecoration(
+                      border: Border(
+                          bottom: BorderSide(color: Color(0xFFD8D8D8))
+                      ),
+                    ),
+                    child: ListTile(
+                        leading: Image.asset('assets/perfilNombreUsuario.png'),
+                        title: Text(
+                          'Perfil',
+                          style: TextStyle(
+                              fontFamily: 'Helvetica Neue',
+                              fontSize: 16,
+                              fontStyle: FontStyle.normal,
+                              fontWeight: FontWeight.normal
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.pushReplacement (
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => Perfil(jwt, payload),
+                              )
+                          );
+                        }
+                    ),
+                  ),
+                  Container(
+                    alignment: Alignment(0.0, 0.0),
+                    height: 72,
+                    decoration: BoxDecoration(
+                      border: Border(
+                          bottom: BorderSide(color: Color(0xFFD8D8D8))
+                      ),
+                    ),
+                    child: ListTile(
+                        leading: Image.asset('assets/candadoDrawer.png'),
+                        title: Text(
+                          'Cambio contraseña',
+                          style: TextStyle(
+                              fontFamily: 'Helvetica Neue',
+                              fontSize: 16,
+                              fontStyle: FontStyle.normal,
+                              fontWeight: FontWeight.normal
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.push (
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CambioContrasenya(payload['email']),
+                              )
+                          );
+                        }
+                    ),
+                  ),
+                  Container(
+                    alignment: Alignment(0.0, 0.0),
+                    height: 72,
+                    decoration: BoxDecoration(
+                      border: Border(
+                          bottom: BorderSide(color: Color(0xFFD8D8D8))
+                      ),
+                    ),
+                    child: ListTile(
+                        leading: Image.asset('assets/candadoDrawer.png'),
+                        title: Text(
+                          'Cambio PIN',
+                          style: TextStyle(
+                              fontFamily: 'Helvetica Neue',
+                              fontSize: 16,
+                              fontStyle: FontStyle.normal,
+                              fontWeight: FontWeight.normal
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.push (
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CambioPin(payload['email']),
+                              )
+                          );
+                        }
+                    ),
+                  ),
+                  Container(
+                    alignment: Alignment(0.0, 0.0),
+                    height: 72,
+                    decoration: BoxDecoration(
+                      border: Border(
+                          bottom: BorderSide(color: Color(0xFFD8D8D8))
+                      ),
+                    ),
+                    child: ListTile(
+                      leading: Image.asset('assets/soporteDrawer.png'),
+                      title: Text(
+                        'Soporte',
+                        style: TextStyle(
+                            fontFamily: 'Helvetica Neue',
+                            fontSize: 16,
+                            fontStyle: FontStyle.normal,
+                            fontWeight: FontWeight.normal
+                        ),
+                      ),
+                    ),
+                  ),
+                  //ListTile(
+                  //  leading: Image.asset('assets/ganaRetirosDrawer.png'),
+                  //  title: Text(
+                  //    'Gana Retiros',
+                  //    style: TextStyle(
+                  //        fontFamily: 'Helvetica Neue',
+                  //        fontSize: 16,
+                  //        fontStyle: FontStyle.normal,
+                  //        fontWeight: FontWeight.normal
+                  //    ),
+                  //  ),
+                  //  shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
+                  //),
+                  Container (
+                    alignment: Alignment(0.0, 0.0),
+                    height: 72,
+                    decoration: BoxDecoration(
+                      border: Border(
+                          bottom: BorderSide(color: Color(0xFFD8D8D8))
+                      ),
+                    ),
+                    child: ListTile(
+                      leading: Image.asset('assets/preguntasFreqDrawer.png'),
+                      title: Text(
+                        'Preguntas frecuentes',
+                        style: TextStyle(
+                            fontFamily: 'Helvetica Neue',
+                            fontSize: 16,
+                            fontStyle: FontStyle.normal,
+                            fontWeight: FontWeight.normal
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container (
+                    alignment: Alignment(0.0, 0.0),
+                    height: 72,
+                    decoration: BoxDecoration(
+                      border: Border(
+                          bottom: BorderSide(color: Color(0xFFD8D8D8))
+                      ),
+                    ),
+                    child: ListTile(
+                      leading: Image.asset(
+                        'assets/terminosYCondiDrawer.png',
+                        fit: BoxFit.cover,
+                      ),
+                      title: Text(
+                        'Términos y condiciones',
+                        style: TextStyle(
+                            fontFamily: 'Helvetica Neue',
+                            fontSize: 16,
+                            fontStyle: FontStyle.normal,
+                            fontWeight: FontWeight.normal
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: posicionOpcionCerrarSesion,
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        height: 72.0,
+                        alignment: Alignment(0.0, 0.0),
+                        decoration: BoxDecoration(
+                          border: Border(
+                              top: BorderSide(color: Color(0xFFD8D8D8))
+                          ),
+                        ),
+                        child: ListTile(
+                          //leading: Image.asset('assets/terminosYCondiDrawer.png'),
+                            contentPadding: EdgeInsets.fromLTRB(80.0, 0, 0, 0),
+                            title: Text(
+                              'Cerrar sesión',
+                              style: TextStyle(
+                                fontFamily: 'Helvetica Neue',
+                                fontSize: 16.0,
+                                fontStyle: FontStyle.normal,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFFE81D5E),
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.pushReplacementNamed(context, '/login');
+                            }
+                        ),
+                      ),
+                    ],
                   )
-              ),
-            ),
-            ListTile(
-                leading: Image.asset('assets/perfilNombreUsuario.png'),
-                title: Text(
-                  'Perfil',
-                  style: TextStyle(
-                      fontFamily: 'Helvetica Neue',
-                      fontSize: 16,
-                      fontStyle: FontStyle.normal,
-                      fontWeight: FontWeight.normal
-                  ),
-                ),
-                shape: Border(bottom: BorderSide(color: Color(0xFFD8D9E3))),
-                onTap: () {
-                  Navigator.pushReplacement (
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Perfil(jwt, payload),
-                      )
-                  );
-                }
-            ),
-            ListTile(
-                leading: Image.asset('assets/candadoDrawer.png'),
-                title: Text(
-                  'Cambio contraseña',
-                  style: TextStyle(
-                      fontFamily: 'Helvetica Neue',
-                      fontSize: 16,
-                      fontStyle: FontStyle.normal,
-                      fontWeight: FontWeight.normal
-                  ),
-                ),
-                shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
-                onTap: () {
-                  Navigator.push (
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CambioContrasenya(payload['email']),
-                      )
-                  );
-                }
-            ),
-            ListTile(
-                leading: Image.asset('assets/candadoDrawer.png'),
-                title: Text(
-                  'Cambio PIN',
-                  style: TextStyle(
-                      fontFamily: 'Helvetica Neue',
-                      fontSize: 16,
-                      fontStyle: FontStyle.normal,
-                      fontWeight: FontWeight.normal
-                  ),
-                ),
-                shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
-                onTap: () {
-                  Navigator.push (
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CambioPin(payload['email']),
-                      )
-                  );
-                }
-            ),
-            ListTile(
-              leading: Image.asset('assets/soporteDrawer.png'),
-              title: Text(
-                'Soporte',
-                style: TextStyle(
-                    fontFamily: 'Helvetica Neue',
-                    fontSize: 16,
-                    fontStyle: FontStyle.normal,
-                    fontWeight: FontWeight.normal
-                ),
-              ),
-              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
-            ),
-            // ListTile(
-            //   leading: Image.asset('assets/ganaRetirosDrawer.png'),
-            //   title: Text(
-            //     'Gana Retiros',
-            //     style: TextStyle(
-            //         fontFamily: 'Helvetica Neue',
-            //         fontSize: 16,
-            //         fontStyle: FontStyle.normal,
-            //         fontWeight: FontWeight.normal
-            //     ),
-            //   ),
-            //   shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
-            // ),
-            ListTile(
-              leading: Image.asset('assets/preguntasFreqDrawer.png'),
-              title: Text(
-                'Preguntas frecuentes',
-                style: TextStyle(
-                    fontFamily: 'Helvetica Neue',
-                    fontSize: 16,
-                    fontStyle: FontStyle.normal,
-                    fontWeight: FontWeight.normal
-                ),
-              ),
-              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
-            ),
-            ListTile(
-              leading: Image.asset('assets/terminosYCondiDrawer.png'),
-              title: Text(
-                'Términos y condiciones',
-                style: TextStyle(
-                    fontFamily: 'Helvetica Neue',
-                    fontSize: 16,
-                    fontStyle: FontStyle.normal,
-                    fontWeight: FontWeight.normal
-                ),
-              ),
-              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
-            )
-          ],
+                ],
+              );
+            }
         ),
       ),
       bottomNavigationBar: _BottonNavigationBar(jwt: jwt, payload: payload),

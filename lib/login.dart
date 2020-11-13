@@ -297,8 +297,16 @@ class _LoginPageState extends State<LoginPage> {
                             base64.decode(base64.normalize(jwt['token'].split(".")[1]))
                         )
                     );
+                    // Gravo en el espacio local la cantidad máxima que puedo retirar
+                    print('Antes de escribir en el Storage el valor de max_permitido. Su valor es: ' + otroPayload['max_permitido'].toString());
+                    storage.delete(key: "max_permitido");
+                    storage.write(key: "max_permitido", value: otroPayload['max_permitido'].toString());
+                    print('Escrito el valor de max_permitido');
+                    var max_permitido = await storage.read(key: "max_permitido");
+                    print('Leído de nuevo el valor de max_permitido: ' + max_permitido);
+                    // Fin grabacion
                     var temp =  new List<Map<String, dynamic>>();
-                    for (var i = 0; i< otroPayload['productsAvail'].length; i++){
+                    for (var i = 0; i< otroPayload['productsAvail'].length; i++) {
                       temp.add({
                         'product_id': otroPayload['productsAvail'][i]['PRODUCT_ID'],
                         'product_name': otroPayload['productsAvail'][i]['PRODUCT_NAME'],
@@ -318,7 +326,7 @@ class _LoginPageState extends State<LoginPage> {
                     print ('Justo después de imprimir los elementos del almacen');
                     // Fin
                     //Navigator.pop(context);
-                    Navigator.push (
+                    Navigator.pushReplacement (
                         context,
                         MaterialPageRoute(builder: (context) => HomePage.fromBase64(jwt['token']))
                     );

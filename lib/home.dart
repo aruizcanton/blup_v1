@@ -11,15 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import 'package:blupv1/detalleCompra.dart';
-import 'package:blupv1/saldo.dart';
-import 'package:blupv1/tienda.dart';
+import 'package:blupv1/soporte.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart' show NumberFormat hide TextDirection;
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import 'package:blupv1/detalleCompra.dart';
+import 'package:blupv1/saldo.dart';
+import 'package:blupv1/tienda.dart';
 import 'package:blupv1/colors.dart';
 import 'package:blupv1/utils/util.dart';
 import 'package:blupv1/detalleRetiro.dart';
@@ -28,6 +30,8 @@ import 'package:blupv1/model/purchasedProduct.dart';
 import 'package:blupv1/perfil.dart';
 import 'package:blupv1/cambioContraseña.dart';
 import 'package:blupv1/cambioPIN.dart';
+import 'package:blupv1/notificaciones.dart';
+import 'package:blupv1/soporte.dart';
 //import 'package:flutter_xlider/flutter_xlider.dart';
 //import 'package:keyboard_actions/keyboard_actions.dart';
 
@@ -76,6 +80,14 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _pleaseWait = b;
     });
+  }
+
+  Future<int> _obtenerMaximoPermitido() async {
+    var storage = FlutterSecureStorage();
+    var max_permitido = await storage.read (key: "max_permitido");
+    if (max_permitido == null) return 0;
+    print ('Estoy en el _obtenerMaximoPermitido. El valor es: ' + max_permitido);
+    return int.parse(max_permitido);
   }
 
   Future<Map<String, dynamic>> _getDataOperation() async {
@@ -206,300 +218,417 @@ class _HomePageState extends State<HomePage> {
               color: Colors.black,
               onPressed: () {
                 print('Filter button');
+                Navigator.push(context, MaterialPageRoute(
+                  builder: (context) => Notificaciones(jwt, payload), // 1 porque lo llamo desde la tab de histórico
+                ));
               },
             ),
           ),
         ],
       ),
-      body: ListView(
-        padding: EdgeInsets.only(left: 16.0, right: 16.0),
-        children: <Widget>[
-          SizedBox(height: 24.0),
-          Card(
-            elevation: 18,
-            clipBehavior: Clip.antiAlias,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  _CustomListItem(
-                    key: _customListItemKey,
-                    //user: payload['persone_name'],
-                    user: payload['user_firstname'],
-                    empresa: payload['empresa'],
-                    saldoAcumulado: payload['salario_acumulado'],
-                    puedesRetirar: payload['max_permitido'],
-                    diasAlaNomina: payload['dias_nomina'],
-                  ),
-                ],
-            ),
-          ),
-          SizedBox(height: 32),
-          payload['max_permitido'] >= 200
-          ? Card(
-            elevation: 6,
-            clipBehavior: Clip.antiAlias,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: FutureBuilder <int>(
+        future: _obtenerMaximoPermitido(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return _pleaseWaitWidget;
+          } else {
+            print('HOLA HOLA');
+            print('El valor de max_permitido es: ' + snapshot.data.toString());
+            print('El valor de user es: ' + payload['user_firstname']);
+            print('El valor de empresa es: ' + payload['empresa']);
+            print('El valor de salario acumulado es: ' + payload['salario_acumulado'].toString());
+            print('El valor de dias a la nómina es: ' + payload['dias_nomina'].toString());
+            return ListView(
+              padding: EdgeInsets.only(left: 16.0, right: 16.0),
               children: <Widget>[
-                 _CustomAmountPermitedDetray(
-                   key: _customAmountPermitedDetray,
-                   puedesRetirar: payload['max_permitido'],
-                   scafoldKey: _scaffoldKey,
-                   customListItemKey: _customListItemKey,
-                   productAvailWidget: _productAvailWidget,
-                   banco: payload['bank'],
-                   cuenta: payload['acct_no'],
-                   cuota: payload['comision'],
-                   jwt: jwt,
-                   payload: payload,
-                 ),
-              ],
-            ),
-          )
-          : Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(10.0)),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0xFFE0E4EE),
-                  offset: Offset(4.0,4.0),
-                  spreadRadius: 1.0,
-                  blurRadius: 15.0,
+                SizedBox(height: 24.0),
+                Card(
+                  elevation: 18,
+                  clipBehavior: Clip.antiAlias,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      _CustomListItem(
+                        key: _customListItemKey,
+                        //user: payload['persone_name'],
+                        user: payload['user_firstname'],
+                        empresa: payload['empresa'],
+                        saldoAcumulado: payload['salario_acumulado'],
+                        //puedesRetirar: payload['max_permitido'],
+                        puedesRetirar: snapshot.data,
+                        diasAlaNomina: payload['dias_nomina'],
+                      ),
+                    ],
+                  ),
                 ),
-                BoxShadow(
-                  color: Colors.white,
-                  offset: Offset(-4.0, -4.0),
-                  spreadRadius: 1.0,
-                  blurRadius: 15.0,
-                ),
-              ]
-            ),
-            child: Card(
-              clipBehavior: Clip.antiAlias,
-              elevation: 6,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-              child: Padding(
-                padding: const EdgeInsets.only(left: 16.0, right: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(height: 32),
-                    Image.asset('assets/dinero.png'),
-                    SizedBox(height: 16),
-                    Text(
-                      'Aún no has acumulado',
-                      style: TextStyle(
-                          fontFamily: 'SF Pro Display',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 24
+                SizedBox(height: 32),
+                (snapshot.data >= 200)
+                    ? Card(
+                  elevation: 6,
+                  clipBehavior: Clip.antiAlias,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      _CustomAmountPermitedDetray(
+                        key: _customAmountPermitedDetray,
+                        puedesRetirar: snapshot.data,
+                        scafoldKey: _scaffoldKey,
+                        customListItemKey: _customListItemKey,
+                        productAvailWidget: _productAvailWidget,
+                        banco: payload['bank'],
+                        cuenta: payload['acct_no'],
+                        cuota: payload['comision'],
+                        jwt: jwt,
+                        payload: payload,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    Text(
-                      'suficiente salario',
-                      style: TextStyle(
-                          fontFamily: 'SF Pro Display',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 24
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'En este momento no puedes',
-                      style: TextStyle(
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.normal,
-                        fontStyle: FontStyle.italic,
-                        fontSize: 16,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    Text(
-                      'realizar un retiro',
-                      style: TextStyle(
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.normal,
-                        fontStyle: FontStyle.italic,
-                        fontSize: 16,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 32),
-                    FlatButton(
-                      padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
-                      child: Container(
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration (
-                          shape: BoxShape.rectangle,
-                          borderRadius: BorderRadius.circular(8.0),
-                          color: Color(0xFFADB0C7),
+                    ],
+                  ),
+                )
+                    : Container(
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFFE0E4EE),
+                          offset: Offset(4.0,4.0),
+                          spreadRadius: 1.0,
+                          blurRadius: 15.0,
                         ),
-                        child: const Text(
-                          'Monto mínimo \$200',
-                          style: TextStyle(
-                              fontSize: 24,
-                              color: Colors.white
+                        BoxShadow(
+                          color: Colors.white,
+                          offset: Offset(-4.0, -4.0),
+                          spreadRadius: 1.0,
+                          blurRadius: 15.0,
+                        ),
+                      ]
+                  ),
+                  child: Card(
+                    clipBehavior: Clip.antiAlias,
+                    elevation: 6,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          SizedBox(height: 32),
+                          Image.asset('assets/dinero.png'),
+                          SizedBox(height: 16),
+                          Text(
+                            'Aún no has acumulado',
+                            style: TextStyle(
+                                fontFamily: 'SF Pro Display',
+                                fontWeight: FontWeight.w700,
+                                fontSize: 24
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                        ),
-                        height: 64,
+                          Text(
+                            'suficiente salario',
+                            style: TextStyle(
+                                fontFamily: 'SF Pro Display',
+                                fontWeight: FontWeight.w700,
+                                fontSize: 24
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'En este momento no puedes',
+                            style: TextStyle(
+                              fontFamily: 'SF Pro Display',
+                              fontWeight: FontWeight.normal,
+                              fontStyle: FontStyle.italic,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          Text(
+                            'realizar un retiro',
+                            style: TextStyle(
+                              fontFamily: 'SF Pro Display',
+                              fontWeight: FontWeight.normal,
+                              fontStyle: FontStyle.italic,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 32),
+                          FlatButton(
+                            padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+                            child: Container(
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration (
+                                shape: BoxShape.rectangle,
+                                borderRadius: BorderRadius.circular(8.0),
+                                color: Color(0xFFADB0C7),
+                              ),
+                              child: const Text(
+                                'Monto mínimo \$200',
+                                style: TextStyle(
+                                    fontSize: 24,
+                                    color: Colors.white
+                                ),
+                              ),
+                              height: 64,
+                            ),
+                          ),
+                          SizedBox(height: 32),
+                        ],
                       ),
                     ),
-                    SizedBox(height: 32),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ),
-          //Card(
-          //  clipBehavior: Clip.antiAlias,
-          //  child: _ProductsAvailWidget(
-          //    key: _productAvailWidget,
-          //    payload: payload,
-          //    scafoldKey: _scaffoldKey,
-          //    customListItemKey: _customListItemKey,
-          //    customAmountPermitedDetray: _customAmountPermitedDetray,
-          //    banco: payload['bank'],
-          //    cuenta: payload['acct_no'],
-          //    jwt: jwt,
-          //  ),
-          //),
-        ],
+                //Card(
+                //  clipBehavior: Clip.antiAlias,
+                //  child: _ProductsAvailWidget(
+                //    key: _productAvailWidget,
+                //    payload: payload,
+                //    scafoldKey: _scaffoldKey,
+                //    customListItemKey: _customListItemKey,
+                //    customAmountPermitedDetray: _customAmountPermitedDetray,
+                //    banco: payload['bank'],
+                //    cuenta: payload['acct_no'],
+                //    jwt: jwt,
+                //  ),
+                //),
+              ],
+            );
+          }
+        }
       ),
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            Container(
-              height: 80.0,
-              child:DrawerHeader(
-                margin: EdgeInsets.all(0.0),
-                padding: EdgeInsets.all(0.0),
-                child: Container(
-                  //padding: EdgeInsets.fromLTRB(0.0, 4.0, 0.0, 4.0),
-                  //height: 48.0,
-                  child: Image.asset('assets/KlinkLogoDrawMenu.png'),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            print ('El alto de la pantalla es: ' + constraints.minHeight.toString());
+            const int constanteAltoPantalla = 540;  // Siempre determino esta altura que hay que eliminar del menu para que la opcion quede a la altura adecuada
+            double posicionOpcionCerrarSesion = constraints.minHeight - (constanteAltoPantalla) - 72; //El ancho de cada opción del menú es de 70 puntos
+            return ListView(
+              padding: EdgeInsets.zero,
+              children: <Widget>[
+                Container(
+                  height: 103.0,
+                  child:DrawerHeader(
+                      margin: EdgeInsets.all(0.0),
+                      padding: EdgeInsets.only(bottom: 10),
+                      child: Container(
+                        //padding: EdgeInsets.fromLTRB(0.0, 4.0, 0.0, 4.0),
+                        //height: 48.0,
+                        child: Image.asset('assets/KlinkLogoDrawMenu.png'),
+                      )
+                  ),
+                ),
+                Container(
+                  alignment: Alignment(0.0, 0.0),
+                  height: 72,
+                  decoration: BoxDecoration(
+                    border: Border(
+                        bottom: BorderSide(color: Color(0xFFD8D8D8))
+                    ),
+                  ),
+                  child: ListTile(
+                      leading: Image.asset('assets/perfilNombreUsuario.png'),
+                      title: Text(
+                        'Perfil',
+                        style: TextStyle(
+                            fontFamily: 'Helvetica Neue',
+                            fontSize: 16,
+                            fontStyle: FontStyle.normal,
+                            fontWeight: FontWeight.normal
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pushReplacement (
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => Perfil(jwt, payload),
+                            )
+                        );
+                      }
+                  ),
+                ),
+                Container(
+                  alignment: Alignment(0.0, 0.0),
+                  height: 72,
+                  decoration: BoxDecoration(
+                    border: Border(
+                        bottom: BorderSide(color: Color(0xFFD8D8D8))
+                    ),
+                  ),
+                  child: ListTile(
+                      leading: Image.asset('assets/candadoDrawer.png'),
+                      title: Text(
+                        'Cambio contraseña',
+                        style: TextStyle(
+                            fontFamily: 'Helvetica Neue',
+                            fontSize: 16,
+                            fontStyle: FontStyle.normal,
+                            fontWeight: FontWeight.normal
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.push (
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CambioContrasenya(payload['email']),
+                            )
+                        );
+                      }
+                  ),
+                ),
+                Container(
+                  alignment: Alignment(0.0, 0.0),
+                  height: 72,
+                  decoration: BoxDecoration(
+                    border: Border(
+                        bottom: BorderSide(color: Color(0xFFD8D8D8))
+                    ),
+                  ),
+                  child: ListTile(
+                      leading: Image.asset('assets/candadoDrawer.png'),
+                      title: Text(
+                        'Cambio PIN',
+                        style: TextStyle(
+                            fontFamily: 'Helvetica Neue',
+                            fontSize: 16,
+                            fontStyle: FontStyle.normal,
+                            fontWeight: FontWeight.normal
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.push (
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CambioPin(payload['email']),
+                            )
+                        );
+                      }
+                  ),
+                ),
+                Container(
+                  alignment: Alignment(0.0, 0.0),
+                  height: 72,
+                  decoration: BoxDecoration(
+                    border: Border(
+                        bottom: BorderSide(color: Color(0xFFD8D8D8))
+                    ),
+                  ),
+                  child: ListTile(
+                    leading: Image.asset('assets/soporteDrawer.png'),
+                    title: Text(
+                      'Soporte',
+                      style: TextStyle(
+                          fontFamily: 'Helvetica Neue',
+                          fontSize: 16,
+                          fontStyle: FontStyle.normal,
+                          fontWeight: FontWeight.normal
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (context) => Soporte(jwt, payload), // 1 porque lo llamo desde la tab de histórico
+                      ));
+                    },
+                  ),
+                ),
+                //ListTile(
+                //  leading: Image.asset('assets/ganaRetirosDrawer.png'),
+                //  title: Text(
+                //    'Gana Retiros',
+                //    style: TextStyle(
+                //        fontFamily: 'Helvetica Neue',
+                //        fontSize: 16,
+                //        fontStyle: FontStyle.normal,
+                //        fontWeight: FontWeight.normal
+                //    ),
+                //  ),
+                //  shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
+                //),
+                Container (
+                  alignment: Alignment(0.0, 0.0),
+                  height: 72,
+                  decoration: BoxDecoration(
+                    border: Border(
+                        bottom: BorderSide(color: Color(0xFFD8D8D8))
+                    ),
+                  ),
+                  child: ListTile(
+                    leading: Image.asset('assets/preguntasFreqDrawer.png'),
+                    title: Text(
+                      'Preguntas frecuentes',
+                      style: TextStyle(
+                          fontFamily: 'Helvetica Neue',
+                          fontSize: 16,
+                          fontStyle: FontStyle.normal,
+                          fontWeight: FontWeight.normal
+                      ),
+                    ),
+                  ),
+                ),
+                Container (
+                  alignment: Alignment(0.0, 0.0),
+                  height: 72,
+                  decoration: BoxDecoration(
+                    border: Border(
+                        bottom: BorderSide(color: Color(0xFFD8D8D8))
+                    ),
+                  ),
+                  child: ListTile(
+                    leading: Image.asset(
+                      'assets/terminosYCondiDrawer.png',
+                      fit: BoxFit.cover,
+                    ),
+                    title: Text(
+                      'Términos y condiciones',
+                      style: TextStyle(
+                          fontFamily: 'Helvetica Neue',
+                          fontSize: 16,
+                          fontStyle: FontStyle.normal,
+                          fontWeight: FontWeight.normal
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: posicionOpcionCerrarSesion,
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Container(
+                      height: 72.0,
+                      alignment: Alignment(0.0, 0.0),
+                      decoration: BoxDecoration(
+                        border: Border(
+                            top: BorderSide(color: Color(0xFFD8D8D8))
+                        ),
+                      ),
+                      child: ListTile(
+                        //leading: Image.asset('assets/terminosYCondiDrawer.png'),
+                          contentPadding: EdgeInsets.fromLTRB(80.0, 0, 0, 0),
+                          title: Text(
+                            'Cerrar sesión',
+                            style: TextStyle(
+                              fontFamily: 'Helvetica Neue',
+                              fontSize: 16.0,
+                              fontStyle: FontStyle.normal,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFFE81D5E),
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.pushReplacementNamed(context, '/login');
+                          }
+                      ),
+                    ),
+                  ],
                 )
-              ),
-            ),
-            ListTile(
-              leading: Image.asset('assets/perfilNombreUsuario.png'),
-              title: Text(
-                'Perfil',
-                style: TextStyle(
-                  fontFamily: 'Helvetica Neue',
-                  fontSize: 16,
-                  fontStyle: FontStyle.normal,
-                  fontWeight: FontWeight.normal
-                ),
-              ),
-              shape: Border(bottom: BorderSide(color: Color(0xFFD8D9E3))),
-              onTap: () {
-                Navigator.pushReplacement (
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Perfil(jwt, payload),
-                    )
-                );
-              }
-            ),
-            ListTile(
-              leading: Image.asset('assets/candadoDrawer.png'),
-              title: Text(
-                'Cambio contraseña',
-                style: TextStyle(
-                    fontFamily: 'Helvetica Neue',
-                    fontSize: 16,
-                    fontStyle: FontStyle.normal,
-                    fontWeight: FontWeight.normal
-                ),
-              ),
-              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
-              onTap: () {
-                Navigator.push (
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CambioContrasenya(payload['email']),
-                    )
-                );
-              }
-            ),
-            ListTile(
-              leading: Image.asset('assets/candadoDrawer.png'),
-              title: Text(
-                'Cambio PIN',
-                style: TextStyle(
-                    fontFamily: 'Helvetica Neue',
-                    fontSize: 16,
-                    fontStyle: FontStyle.normal,
-                    fontWeight: FontWeight.normal
-                ),
-              ),
-              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
-              onTap: () {
-                Navigator.push (
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CambioPin(payload['email']),
-                    )
-                );
-              }
-            ),
-            ListTile(
-              leading: Image.asset('assets/soporteDrawer.png'),
-              title: Text(
-                'Soporte',
-                style: TextStyle(
-                    fontFamily: 'Helvetica Neue',
-                    fontSize: 16,
-                    fontStyle: FontStyle.normal,
-                    fontWeight: FontWeight.normal
-                ),
-              ),
-              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
-            ),
-            //ListTile(
-            //  leading: Image.asset('assets/ganaRetirosDrawer.png'),
-            //  title: Text(
-            //    'Gana Retiros',
-            //    style: TextStyle(
-            //        fontFamily: 'Helvetica Neue',
-            //        fontSize: 16,
-            //        fontStyle: FontStyle.normal,
-            //        fontWeight: FontWeight.normal
-            //    ),
-            //  ),
-            //  shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
-            //),
-            ListTile(
-              leading: Image.asset('assets/preguntasFreqDrawer.png'),
-              title: Text(
-                'Preguntas frecuentes',
-                style: TextStyle(
-                    fontFamily: 'Helvetica Neue',
-                    fontSize: 16,
-                    fontStyle: FontStyle.normal,
-                    fontWeight: FontWeight.normal
-                ),
-              ),
-              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
-            ),
-            ListTile(
-              leading: Image.asset('assets/terminosYCondiDrawer.png'),
-              title: Text(
-                'Términos y condiciones',
-                style: TextStyle(
-                    fontFamily: 'Helvetica Neue',
-                    fontSize: 16,
-                    fontStyle: FontStyle.normal,
-                    fontWeight: FontWeight.normal
-                ),
-              ),
-              shape: Border(bottom: BorderSide(width: 1.0, color: Color(0xFFD8D9E3))),
-            )
-          ],
+              ],
+            );
+          }
         ),
       ),
       bottomNavigationBar: _BottonNavigationBar(jwt: jwt, payload: payload),
@@ -743,30 +872,6 @@ class _BottonNavigationBarState extends State<_BottonNavigationBar>{
           )
       ),
     );
-  }
-}
-class _ProductsAvailWidget extends StatefulWidget {
-  final Map<String, dynamic> payload;
-  final GlobalKey<ScaffoldState> scafoldKey;
-  final String banco;
-  final String cuenta;
-  final String jwt;
-  final GlobalKey<_CustomListItemState> customListItemKey;
-  final GlobalKey<_CustomAmountPermitedDetrayState> customAmountPermitedDetray;
-  _ProductsAvailWidget({
-    Key key,
-    this.payload,
-    this.scafoldKey,
-    this.customListItemKey,
-    this.customAmountPermitedDetray,
-    this.banco,
-    this.cuenta,
-    this.jwt
-  }): super (key : key);
-
-  @override
-  _ProductsAvailState createState() {
-    return _ProductsAvailState(payload, scafoldKey, customListItemKey, customAmountPermitedDetray, banco, cuenta, jwt);
   }
 }
 class _ProductsAvailState extends State {
@@ -1394,8 +1499,8 @@ class _CustomAmountPermitedDetrayState extends State {
   final Map<String, dynamic> payload;
 
   GlobalKey _sliderKey = GlobalKey();
-  final PleaseWaitBlueBackGroundWidget _pleaseWaitWidget =
-  PleaseWaitBlueBackGroundWidget(key: ObjectKey("pleaseWaitBlueBackGroundWidget"));
+  final PleaseWaitWidget _pleaseWaitWidget =
+  PleaseWaitWidget(key: ObjectKey("pleaseWaitBlueBackGroundWidget"));
   bool _pleaseWait = false;
   int _rating;
   TextEditingController _amountToDetray = TextEditingController();
@@ -1417,9 +1522,10 @@ class _CustomAmountPermitedDetrayState extends State {
     super.initState();
     amoutToDetray = this.puedesRetirar;
     _rating = amoutToDetray < 200 ? amoutToDetray : 200;
-    _amountToDetray.text = "0";
+    _amountToDetray.text = "10";
     _confirmaRetiro = false;
     _tecladoNumerico = true;
+    _pleaseWait = false;
     expandFlag = false;
   }
 
@@ -1647,12 +1753,10 @@ class _CustomAmountPermitedDetrayState extends State {
                     //keyboardType: _tecladoNumerico ? TextInputType.number : TextInputType.emailAddress,
                     keyboardType: TextInputType.text,
                     onFieldSubmitted: (text) {
-                      //print('La cantidad que se ha escrito es: ' + _amountToDetray.text);
                       var importe = int.parse(text);
-                      //print('La cantidad cruda es:' + _rating.toString());
-                      //print('El maximo que puedes retirar es: ' + _puedesRetirar.toString());
-                      if (amoutToDetray < 200) {
-                        _showSnackBar('No puede realizar ningún retiro mas. Ha agotado su saldo.' , error: false);
+                      if (amoutToDetray < 10) {
+                        //_showSnackBar('No puede realizar ningún retiro mas. Ha agotado su saldo.' , error: false);
+                        _showSnackBar('El importe del retiro ha de ser mayor a \$10.' , error: false);
                       } else if ((puedesRetirar == 0) && (customListItemKey.currentState.saldoAcumulado == 0)) {
                         _showSnackBar('No puede realizar ningún retiro. Estamos en la fecha de ajuste.', error: false);
                       }
@@ -1723,7 +1827,7 @@ class _CustomAmountPermitedDetrayState extends State {
                       child: Slider (
                         key: _sliderKey,
                         value: _rating.toDouble(),
-                        min: amoutToDetray < 200 ? amoutToDetray.toDouble() : 200,
+                        min: amoutToDetray < 10 ? amoutToDetray.toDouble() : 10,
                         max: amoutToDetray.toDouble(),
                         activeColor: Color(0xFF4895F6),
                         inactiveColor: Color(0xFF9C9EB7),
@@ -1754,7 +1858,7 @@ class _CustomAmountPermitedDetrayState extends State {
             children: [
               Expanded(
                 child: Text(
-                  '\$ 200',
+                  '\$ 10',
                   style: const TextStyle(
                     fontFamily: 'SF Pro Display',
                     fontWeight: FontWeight.w500,
@@ -1809,82 +1913,89 @@ class _CustomAmountPermitedDetrayState extends State {
                     onPressed: () async {
                       try {
                         if (int.parse(_amountToDetray.text) > 0) {
-                          if ((int.parse(_amountToDetray.text)+cuota) <= (customListItemKey.currentState.puedesRetirar)) {
-                            await _displayDialog (context, _amountToDetray.text, banco, cuenta, cuota);
-                            print ('El valor de _confirmaretiro es: ' + _confirmaRetiro.toString());
-                            if (_confirmaRetiro) {
-                              print('He confirmado el retiro');
-                              print('Justo antes de llamar a _showPleaseWait');
-                              print('El valor de pleaseWait es: ' + _pleaseWait.toString());
-                              _showPleaseWait(true);
-                              print('Justo después de llamar a _showPleaseWait');
-                              print('El valor de pleaseWait es: ' + _pleaseWait.toString());
-                              final http.Response res = await http.post("$SERVER_IP/saveTransaction",
-                                  headers: <String, String>{
-                                    'Content-Type': 'application/json; charset=UTF-8',
-                                    'Authorization': jwt
-                                  },
-                                  body: jsonEncode(<String, dynamic>{
-                                    'company_id': payload['company_id'],
-                                    'persone_id': payload['empleado_id'],
-                                    'period_id': payload['period_id'],
-                                    'bank_account_id': payload['bank_account_id'],
-                                    'salario_acumulado': payload['salario_acumulado'],
-                                    //'salario_acumulado': customListItemKey.currentState.puedesRetirar,
-                                    'max_permitido': customListItemKey.currentState.puedesRetirar,
-                                    'extracted_amount': _amountToDetray.text,
-                                    'comision': payload['comision'],
-                                    'acct_no': payload['acct_no'],
-                                    'persone_name': payload['persone_name'],
-                                    'email': payload['email']
-                                  })
-                              );
-                              if (res.statusCode == 200) {
-                                // He de variar la cantidad que puedes retirar de la pantalla
-                                print('Justo antes de llamar por segunda vez _showPleaseWait');
+                          if (amoutToDetray > 10){  // El retiro mínimo es de $10
+                            if ((int.parse(_amountToDetray.text)+cuota) <= (customListItemKey.currentState.puedesRetirar)) {
+                              await _displayDialog (context, _amountToDetray.text, banco, cuenta, cuota);
+                              print ('El valor de _confirmaretiro es: ' + _confirmaRetiro.toString());
+                              if (_confirmaRetiro) {
+                                print('He confirmado el retiro');
+                                print('Justo antes de llamar a _showPleaseWait');
                                 print('El valor de pleaseWait es: ' + _pleaseWait.toString());
-                                _showPleaseWait(false);
+                                _showPleaseWait(true);
                                 print('Justo después de llamar a _showPleaseWait');
                                 print('El valor de pleaseWait es: ' + _pleaseWait.toString());
-                                print('El retiro ha sido hecho con retorno 200');
-                                customListItemKey.currentState.setState(() {
-                                  customListItemKey.currentState.puedesRetirar = customListItemKey.currentState.puedesRetirar - (int.parse(_amountToDetray.text)+cuota);
-                                });
-                                setState(() {
-                                  amoutToDetray = amoutToDetray - (int.parse(_amountToDetray.text)+cuota);
-                                  payload['max_permitido'] = amoutToDetray;
-                                  expandFlag = false;
-
-                                });
-                                _amountToDetray.text = "0";
-                                print('Después de el http.post');
-                                final retorno = Map();
-                                retorno['day'] = json.decode(res.body)['day'];
-                                retorno['extracted_amount'] = json.decode(res.body)['extracted_amount'];
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => DetalleRetiro.fromBase64(jwt, json.decode(res.body)),
-                                      fullscreenDialog: false,
-                                    )
+                                final http.Response res = await http.post("$SERVER_IP/saveTransaction",
+                                    headers: <String, String>{
+                                      'Content-Type': 'application/json; charset=UTF-8',
+                                      'Authorization': jwt
+                                    },
+                                    body: jsonEncode(<String, dynamic>{
+                                      'company_id': payload['company_id'],
+                                      'persone_id': payload['empleado_id'],
+                                      'period_id': payload['period_id'],
+                                      'bank_account_id': payload['bank_account_id'],
+                                      'salario_acumulado': payload['salario_acumulado'],
+                                      //'salario_acumulado': customListItemKey.currentState.puedesRetirar,
+                                      'max_permitido': customListItemKey.currentState.puedesRetirar,
+                                      'extracted_amount': _amountToDetray.text,
+                                      'comision': payload['comision'],
+                                      'acct_no': payload['acct_no'],
+                                      'persone_name': payload['persone_name'],
+                                      'email': payload['email']
+                                    })
                                 );
-                              } else if (res.statusCode == 404) {
-                                _showPleaseWait(false);
-                                // Como retorno que le token no es valido retorno a la página de Login
-                                print('Me marcho por le que el Token esta caducado');
-                                //Navigator.pop(context);
-                                Navigator.pushNamed(context, '/login');
-                                //_showSnackBar(json.decode(res.body)['message'], error: false);
-                              } else {
-                                _showPleaseWait(false);
-                                print('Me voy por el else de que no es ni 200 ni 404');
-                                print('Error:' + json.decode(res.body)['message']);
-                                _showSnackBar(json.decode(res.body)['message'], error: false);
+                                if (res.statusCode == 200) {
+                                  // He de variar la cantidad que puedes retirar de la pantalla
+                                  print('Justo antes de llamar por segunda vez _showPleaseWait');
+                                  print('El valor de pleaseWait es: ' + _pleaseWait.toString());
+                                  _showPleaseWait(false);
+                                  print('Justo después de llamar a _showPleaseWait');
+                                  print('El valor de pleaseWait es: ' + _pleaseWait.toString());
+                                  print('El retiro ha sido hecho con retorno 200');
+                                  customListItemKey.currentState.setState(() {
+                                    customListItemKey.currentState.puedesRetirar = customListItemKey.currentState.puedesRetirar - (int.parse(_amountToDetray.text)+cuota);
+                                  });
+                                  setState(() {
+                                    amoutToDetray = amoutToDetray - (int.parse(_amountToDetray.text)+cuota);
+                                    payload['max_permitido'] = amoutToDetray;
+                                    expandFlag = false;
+                                  });
+                                  var storage = FlutterSecureStorage();
+                                  storage.delete(key: "max_permitido");
+                                  storage.write(key: "max_permitido", value: payload['max_permitido'].toString());
+                                  _amountToDetray.text = "0";
+                                  print('Después de el http.post');
+                                  final retorno = Map();
+                                  retorno['day'] = json.decode(res.body)['day'];
+                                  retorno['extracted_amount'] = json.decode(res.body)['extracted_amount'];
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => DetalleRetiro.fromBase64(jwt, json.decode(res.body)),
+                                        fullscreenDialog: false,
+                                      )
+                                  );
+                                } else if (res.statusCode == 404) {
+                                  _showPleaseWait(false);
+                                  // Como retorno que le token no es valido retorno a la página de Login
+                                  print('Me marcho por le que el Token esta caducado');
+                                  //Navigator.pop(context);
+                                  Navigator.pushNamed(context, '/login');
+                                  //_showSnackBar(json.decode(res.body)['message'], error: false);
+                                } else {
+                                  _showPleaseWait(false);
+                                  print('Me voy por el else de que no es ni 200 ni 404');
+                                  print('Error:' + json.decode(res.body)['message']);
+                                  _showSnackBar(json.decode(res.body)['message'], error: false);
+                                }
                               }
+                            } else {
+                              _showPleaseWait(false);
+                              _showSnackBar('El retiro no puede ser superior a ' + customListItemKey.currentState.puedesRetirar.toString() + '.', error: false);
                             }
                           } else {
                             _showPleaseWait(false);
-                            _showSnackBar('El retiro no puede ser superior a ' + customListItemKey.currentState.puedesRetirar.toString() + '.', error: false);
+                            _showSnackBar('El retiro ha de ser superior a \$10.', error: false);
                           }
                         } else {
                           if (puedesRetirar > 0) {
@@ -2167,145 +2278,6 @@ class _CustomListItemState extends State {
             ),
           ),
         ]
-      ),
-    );
-  }
-}
-class _UserDescription extends StatefulWidget {
-  _UserDescription({
-    this.user,
-    this.saldoAcumulado,
-    this.puedesRetirar,
-    this.diasAlaNomina,
-  });
-
-  final String user;
-  final int saldoAcumulado;
-  int puedesRetirar;
-  final int diasAlaNomina;
-
-  @override
-  _UserDescriptionState createState() {
-    return _UserDescriptionState(
-        user, saldoAcumulado, puedesRetirar, diasAlaNomina);
-  }
-}
-class _UserDescriptionState extends State {
-  _UserDescriptionState (
-      this.user,
-      this.saldoAcumulado,
-      this.puedesRetirar,
-      this.diasAlaNomina,
-  );
-
-  final String user;
-  final int saldoAcumulado;
-  int puedesRetirar;
-  final int diasAlaNomina;
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(5.0, 0.0, 5.0, 0.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Text(
-                user,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 26.0,
-                    color: Colors.black
-                ),
-              ),
-            ],
-          ),
-          const Divider(
-            color: Colors.black,
-            height: 20,
-            thickness: 5,
-            indent: 20,
-            endIndent: 0,
-          ),
-          Row(
-//              crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: <Widget>[
-              Column(
-                children: <Widget>[
-                  Text(
-                    new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(saldoAcumulado),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 22.0,
-                      color: Colors.black,
-                    ),
-                  ),
-                  Text(
-                      'Saldo acuuumulado',
-                      style: const TextStyle(
-                        fontSize: 10.0,
-                        color: Colors.black,
-                      )
-                  ),
-                ],
-              ),
-              _VerticalDivider(),
-              Column(
-                children: <Widget>[
-                  Text(
-                    new NumberFormat.currency(locale:'en_US', symbol: '\$ ', decimalDigits:0).format(puedesRetirar),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 22.0,
-                      color: Colors.black,
-                    ),
-                  ),
-                  Text(
-                      'Puedes Retirar',
-                      style: const TextStyle(
-                        fontSize: 10.0,
-                        color: Colors.black,
-                      )
-                  ),
-                ],
-              ),
-              _VerticalDivider(),
-              Column(
-                children: <Widget>[
-                  Text.rich(
-                      TextSpan(
-                          text: diasAlaNomina.toString(),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 22.0,
-                            color: Colors.black,
-                          ),
-                          children: <TextSpan>[
-                            TextSpan(
-                                text: ' días',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 10.0,
-                                  color: Colors.black,
-                                )
-                            )
-                          ]
-                      )
-                  ),
-                  Text(
-                      'a la nómina',
-                      style: const TextStyle(
-                        fontSize: 10.0,
-                        color: Colors.black,
-                      )
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }

@@ -1,47 +1,50 @@
-// Copyright 2018-present the Flutter authors. All Rights Reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 import 'package:flutter/foundation.dart';
 
 class Product {
   const Product({
-    @required this.category,
-    @required this.id,
-    @required this.isFeatured,
-    @required this.name,
-    @required this.saldoAcumulado,
-    @required this.puedesRetirar,
-    @required this.diasALaNomina,
-  })  : assert(category != null),
-        assert(id != null),
-        assert(isFeatured != null),
-        assert(name != null),
-        assert(saldoAcumulado != null),
-        assert(puedesRetirar != null),
-        assert(diasALaNomina != null);
+    @required this.product_id,
+    @required this.poduct_name,
+    @required this.poduct_description,
+    @required this.product_type,
+    @required this.brand,
+    @required this.image,
+    @required this.avail,
+    @required this.product_price,
+    @required this.comission,
+    @required this.remark
+  })  : assert(product_id != null),
+        assert(poduct_name != null),
+        assert(poduct_description != null),
+        assert(product_type != null),
+        assert(brand != null),
+        assert(image != null),
+        assert(avail != null),
+        assert(product_price != null),
+        assert(comission != null);
 
-  final Category category;
-  final int id;
-  final bool isFeatured;
-  final String name;
-  final int saldoAcumulado;
-  final int puedesRetirar;
-  final int diasALaNomina;
+  final int product_id;
+  final String poduct_name;
+  final String poduct_description;
+  final String product_type;
+  final String brand;
+  final String image;
+  final int avail;
+  final int product_price;
+  final int comission;
+  final String remark;
 
-  String get assetName => '$id-0.jpg';
-  String get assetPackage => 'shrine_images';
-
-  @override
-  String toString() => "$name (id=$id)";
+  factory Product.fomJson(Map<String, dynamic> json) {
+    return Product(
+      product_id: int.parse(json['PRODUCT_ID']),
+      poduct_name : json['PRODUCT_NAME'],
+      poduct_description : json['PRODUCT_DESCRIPTION'],
+      product_type: json['PRODUCT_TYPE'],
+      brand: json['BRAND'],
+      image: json['IMAGE'],
+      avail: int.parse(json['AVAIL']),
+      product_price: int.parse(json['PRODUCT_PRICE']),
+      comission: int.parse(json['COMISSION']),
+      remark: json['REMARK']
+    );
+  }
 }

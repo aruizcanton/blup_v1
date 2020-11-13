@@ -224,12 +224,15 @@ class CompraProductoState extends State<CompraProducto> with SingleTickerProvide
                             setState(() {
                               _importeProductos = _importeProductos - productoAComprar.product_price;
                               _importeComision = _importeComision - productoAComprar.comission;
-                              _importeTotal = _importeProductos - _importeComision;
+                              _importeTotal = _importeProductos + _importeComision;
                               _productosComprados.remove(productoAComprar);
                               _numUnidades = _numUnidades - 1;
                             });
-                            print('el numero de unidades es: ' + _numUnidades.toString());
                           }
+                          print('el numero de unidades es: ' + _numUnidades.toString());
+                          print('El _importeProductos es: ' + _importeProductos.toString());
+                          print('El _importeComision es: ' + _importeComision.toString());
+                          print('El _importeTotal es: ' + _importeTotal.toString());
                         },
                         child: Container(
                           alignment: Alignment.center,
@@ -285,6 +288,9 @@ class CompraProductoState extends State<CompraProducto> with SingleTickerProvide
                               _numUnidades = _numUnidades +1;
                             });
                             print('el numero de unidades es: ' + _numUnidades.toString());
+                            print('El _importeProductos es: ' + _importeProductos.toString());
+                            print('El _importeComision es: ' + _importeComision.toString());
+                            print('El _importeTotal es: ' + _importeTotal.toString());
                           } else {
                             print('Ya se ha llegado al máximo de unidades disponibles');
                             _showSnackBar('El máximo disponible de este producto es: ' + productoAComprar.avail.toString());
@@ -454,13 +460,18 @@ class CompraProductoState extends State<CompraProducto> with SingleTickerProvide
                               //  customAmountPermitedDetray.currentState.amoutToDetray = customListItemKey.currentState._puedesRetirar - _importeTotal;
                               //});
                               print('Después de el http.post');
-                              setState(() {
-                                _importeTotal = 0;
-                                _importeProductos = 0;
-                                _importeComision = 0;
-                                _puedesRetirar = _puedesRetirar - _importeTotal;
-                                Navigator.pop(context);
-                              });
+                              _puedesRetirar = _puedesRetirar - _importeTotal;
+                              _importeTotal = 0;
+                              _importeProductos = 0;
+                              _importeComision = 0;
+                              payload['max_permitido'] = _puedesRetirar;
+                              var storage = FlutterSecureStorage();
+                              storage.delete(key: "max_permitido");
+                              print ('Antes de escribir el max_permitido. el valor es: ' + _puedesRetirar.toString());
+                              storage.write(key: "max_permitido", value: _puedesRetirar.toString());
+                              var max_permitido = await storage.read (key: "max_permitido");
+                              print('Después de leer max_permitido. Su valor es: ' + max_permitido);
+                              Navigator.pop(context);
                             } else if (res.statusCode == 404) {
                               _showPleaseWait(false);
                               print ('Me voy por el que el Token esta caducado');
@@ -698,6 +709,13 @@ class CompraProductoState extends State<CompraProducto> with SingleTickerProvide
       Text('${error ? "Ocurrió un error: " : ""}${content}'),
     ));
   }
+  Future<int> _obtenerMaximoPermitido() async {
+    var storage = FlutterSecureStorage();
+    var max_permitido = await storage.read(key: "max_permitido");
+    if (max_permitido == null) return 0;
+
+    return int.parse(max_permitido);
+  }
   @override
   void initState() {
     super.initState();
@@ -707,7 +725,6 @@ class CompraProductoState extends State<CompraProducto> with SingleTickerProvide
     _confirmaRetiro = false;
     _pleaseWait = false;
     _numUnidades = 1;
-    _puedesRetirar = payload['max_permitido'];
     _productosComprados.add(productoAComprar);
   }
   @override
@@ -716,7 +733,7 @@ class CompraProductoState extends State<CompraProducto> with SingleTickerProvide
   }
   @override
   Widget build(BuildContext context) {
-    print('El valor de puedes retirar es: ' + _puedesRetirar.toString());
+    //print('El valor de puedes retirar es: ' + _puedesRetirar.toString());
     //_puedesRetirar = payload['max_permitido'];
     return Scaffold(
       key: _scaffoldKey,
@@ -751,7 +768,17 @@ class CompraProductoState extends State<CompraProducto> with SingleTickerProvide
             textAlign: TextAlign.left,
           ),
       ),
-      body: pantalla(context, productoAComprar),
+      body: FutureBuilder<int>(
+        future: _obtenerMaximoPermitido(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return _pleaseWaitWidget;
+          } else {
+              _puedesRetirar = snapshot.data;
+            return pantalla(context, productoAComprar);
+          }
+        }
+      ),
     );
   }
 }
