@@ -165,7 +165,7 @@ class TiendaState extends State<Tienda> with SingleTickerProviderStateMixin {
               padding: EdgeInsets.only(left: 0.0, right: 0.0, top: 24),
               itemCount: snapshot.data['cartItems'].length,
               //itemCount: almacen.itemsProductosComprados.length,
-              itemBuilder: (BuildContext context, int index){
+              itemBuilder: (BuildContext context, int index) {
                 return Card(
                   borderOnForeground: true,
                   clipBehavior: Clip.antiAlias,

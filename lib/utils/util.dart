@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../colors.dart';
 
-//const SERVER_IP = 'https://192.168.1.134:9010/server';
-const SERVER_IP = 'https://192.168.2.106:9010/server';
+const SERVER_IP = 'https://192.168.1.134:9010/server';
+//const SERVER_IP = 'https://192.168.2.106:9010/server';
 //const SERVER_IP = 'https://192.168.1.37:9000/server';
 //const SERVER_IP = 'https://ec2-3-83-228-250.compute-1.amazonaws.com:9000/server';
 //const SERVER_IP = 'https://3.83.228.250:9000/server';

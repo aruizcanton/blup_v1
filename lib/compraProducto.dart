@@ -353,6 +353,7 @@ class CompraProductoState extends State<CompraProducto> with SingleTickerProvide
                           )
                       ),
                       height: 64,
+
                     ),
                     elevation: 8.0, // New
                     onPressed: () async {
